@@ -1,0 +1,1238 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Kéo co tri thức</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800;900&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<style>
+/* Layout: projector screen — team panels row / sunny arena with timer pill / gold-framed question card */
+:root{
+  color-scheme: light;
+  --ink:#22124a; --ink-2:#341d6e;
+  --gold:#ffc93c; --gold-dk:#d98e04;
+  --ok:#22c55e;
+  --a:#14b8a6; --b:#ff9f1c; --c:#ec4899; --d:#65c31a;
+  --display:"Baloo 2","Nunito","Segoe UI",system-ui,sans-serif;
+  --body:"Nunito","Segoe UI",system-ui,sans-serif;
+  --fz:1;
+}
+[hidden]{display:none!important}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:#5fc8ff;color:#fff;font-family:var(--body);overflow:hidden}
+button{font-family:var(--display);cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:4px solid var(--gold);outline-offset:2px}
+
+#app{height:100%;display:grid;grid-template-rows:auto minmax(130px,1fr) auto;gap:8px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px;
+  background:linear-gradient(#4cc3ff 0%,#9be3ff 55%,#c9f1ff 100%);position:relative}
+
+/* ---------- TEAM PANELS ---------- */
+.hud{display:grid;grid-template-columns:repeat(var(--n,2),minmax(0,1fr));gap:12px;position:relative;z-index:3}
+.team{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:22px;border:4px solid var(--gold);
+  background:linear-gradient(135deg,var(--c1),var(--c2));box-shadow:0 6px 0 var(--gold-dk),0 10px 20px rgba(0,0,0,.25);min-width:0;position:relative}
+.tav{width:clamp(44px,6vh,66px);flex:none;filter:drop-shadow(0 3px 0 rgba(0,0,0,.25))}
+.tinfo{min-width:0;flex:1;display:grid;gap:4px}
+.tname{font-family:var(--display);font-weight:800;font-size:clamp(18px,3.2vh,36px);line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 3px 0 rgba(0,0,0,.25)}
+.tsub{display:flex;gap:6px;align-items:center;font-weight:800;font-size:clamp(11px,1.5vh,15px);flex-wrap:wrap}
+.chip{background:rgba(0,0,0,.22);padding:1px 9px;border-radius:99px;white-space:nowrap}
+.pips{display:flex;gap:5px}
+.pips i{width:clamp(12px,1.8vh,18px);aspect-ratio:1;border-radius:50%;background:rgba(0,0,0,.25);border:2px solid rgba(255,255,255,.7)}
+.pips i.on{background:var(--gold);border-color:#fff;box-shadow:0 0 8px var(--gold)}
+.pads{display:flex;gap:5px;flex:none}
+.pads button{width:clamp(30px,4.2vh,46px);aspect-ratio:1;border-radius:12px;border:3px solid rgba(255,255,255,.85);
+  background:rgba(255,255,255,.18);color:#fff;font-weight:800;font-size:clamp(14px,2.1vh,22px);padding:0}
+.pads button:hover{background:rgba(255,255,255,.35)}
+.n3 .pads{display:none}
+.lock{position:absolute;top:-14px;left:50%;transform:translateX(-50%) scale(0);background:var(--gold);color:var(--ink);font-family:var(--display);
+  font-weight:800;padding:1px 14px;border-radius:99px;font-size:clamp(13px,2vh,20px);box-shadow:0 3px 0 var(--gold-dk);transition:transform .25s cubic-bezier(.3,1.8,.5,1);white-space:nowrap}
+.lock.on{transform:translateX(-50%) scale(1)}
+
+/* ---------- STAGE ---------- */
+.stage{position:relative;min-height:0;border-radius:26px;overflow:hidden;border:4px solid var(--gold);box-shadow:0 6px 0 var(--gold-dk),0 10px 22px rgba(0,0,0,.25)}
+#scene{position:absolute;inset:0;width:100%;height:100%;display:block}
+.cloud{animation:drift linear infinite}
+@keyframes drift{from{transform:translateX(-300px)}to{transform:translateX(1900px)}}
+.sunrays{transform-box:fill-box;transform-origin:center;animation:spin 30s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.eyes{transform-box:fill-box;transform-origin:center;animation:blink 4s infinite}
+@keyframes blink{0%,94%,100%{transform:scaleY(1)}97%{transform:scaleY(.1)}}
+.splash{opacity:0;transform-box:fill-box;transform-origin:center}
+.splash.on{animation:splash 1.3s ease-out forwards}
+@keyframes splash{0%{opacity:1;transform:scale(.2)}60%{opacity:1}100%{opacity:0;transform:scale(1.7) translateY(-30px)}}
+
+.pill{position:absolute;top:10px;left:10px;z-index:2;display:flex;align-items:center;gap:12px;background:var(--ink);
+  border:4px solid var(--gold);border-radius:99px;padding:3px 6px 3px 20px;box-shadow:0 5px 0 var(--gold-dk)}
+.qcount{font-family:var(--display);font-weight:800;font-size:clamp(16px,2.6vh,28px);color:var(--gold);white-space:nowrap}
+.timer{position:relative;width:clamp(44px,6.6vh,70px);aspect-ratio:1}
+.timer svg{width:100%;height:100%;transform:rotate(-90deg)}
+.timer .num{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:clamp(18px,3.2vh,34px)}
+.timer.hurry .num{color:#ff8a9a;animation:pulse .5s infinite alternate}
+@keyframes pulse{to{transform:scale(1.2)}}
+.banner{position:absolute;left:50%;top:12px;transform:translateX(-50%) scale(0);z-index:2;font-family:var(--display);font-weight:800;
+  font-size:clamp(22px,4.6vh,52px);padding:4px 28px;border-radius:99px;background:var(--ink);border:4px solid var(--gold);
+  box-shadow:0 6px 0 var(--gold-dk);white-space:nowrap;transition:transform .35s cubic-bezier(.3,1.7,.5,1);max-width:96%;overflow:hidden;text-overflow:ellipsis}
+.banner.on{transform:translateX(-50%) scale(1)}
+.n3 .banner{top:auto;bottom:12px}
+.toolbar{position:absolute;top:10px;right:10px;z-index:3;display:flex;gap:6px}
+.toolbar button{width:42px;height:42px;border-radius:12px;border:3px solid #fff;background:#0005;color:#fff;font-size:20px;display:grid;place-items:center;padding:0}
+
+/* ---------- QUESTION CARD ---------- */
+.qcard{position:relative;z-index:2;background:linear-gradient(var(--ink-2),var(--ink));border:5px solid var(--gold);border-radius:26px;
+  box-shadow:inset 0 0 0 3px #7a52d6,0 6px 0 var(--gold-dk),0 12px 24px rgba(0,0,0,.3);padding:14px 16px 14px;display:grid;gap:10px;max-height:62vh;overflow:auto}
+.fz{position:absolute;top:6px;left:12px;display:flex;align-items:center;gap:4px;font-weight:900;font-size:13px;opacity:.85}
+.fz button{width:34px;height:30px;border-radius:9px;border:2px solid var(--gold);background:transparent;color:var(--gold);font-weight:800;font-size:16px;padding:0;line-height:1}
+.fz button:hover{background:var(--gold);color:var(--ink)}
+.qtext{font-family:var(--display);font-weight:800;text-align:center;font-size:calc(clamp(22px,min(3.4vw,6vh),58px) * var(--fz));line-height:1.15;text-wrap:balance;
+  text-shadow:0 3px 0 rgba(0,0,0,.35);min-height:1.2em;padding-inline:clamp(0px,9vw,130px)}
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ans{position:relative;display:flex;align-items:center;gap:14px;padding:8px 14px;border-radius:18px;background:#fff;color:var(--ink);
+  border:4px solid transparent;box-shadow:0 5px 0 rgba(0,0,0,.28);min-width:0;transition:transform .25s,opacity .25s,background .25s}
+.ans .lt{flex:none;width:calc(clamp(34px,5.2vh,56px) * min(var(--fz),1.4));aspect-ratio:1;border-radius:14px;display:grid;place-items:center;color:#fff;
+  font-family:var(--display);font-weight:800;font-size:calc(clamp(20px,3.2vh,34px) * min(var(--fz),1.4));box-shadow:inset 0 -4px 0 rgba(0,0,0,.2)}
+.ans:nth-child(1) .lt{background:var(--a)}.ans:nth-child(2) .lt{background:var(--b)}.ans:nth-child(3) .lt{background:var(--c)}.ans:nth-child(4) .lt{background:var(--d)}
+.ans .tx{font-family:var(--display);font-weight:800;font-size:calc(clamp(18px,min(2.7vw,5vh),46px) * var(--fz));line-height:1.1;min-width:0;overflow-wrap:anywhere}
+.ans.right{background:#d9ffe6;border-color:var(--ok);transform:scale(1.02)}
+.ans.right::after{content:"✔";position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:clamp(26px,4vh,44px);color:var(--ok)}
+.ans.dim{opacity:.4}
+.picks{position:absolute;top:-12px;right:46px;display:flex;gap:6px}
+.picks span{font-family:var(--display);font-weight:800;font-size:clamp(12px,1.8vh,18px);color:#fff;padding:0 10px;border-radius:99px;border:2px solid #fff}
+.qctl{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.btn{border:none;border-radius:16px;padding:8px 22px;font-weight:800;font-size:clamp(15px,2.2vh,24px);color:var(--ink);background:var(--gold);box-shadow:0 5px 0 var(--gold-dk)}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 var(--gold-dk)}
+.btn.ghost{background:#ffffff22;color:#fff;box-shadow:0 5px 0 #0004}
+.btn.tm{background:var(--c1);color:#fff;box-shadow:0 5px 0 var(--c2)}
+.btn.big{font-size:clamp(20px,3.2vh,34px);padding:8px 32px;border-radius:20px}
+
+/* ---------- OVERLAYS ---------- */
+.ov{position:absolute;inset:0;z-index:10;display:grid;place-items:center;padding:16px;background:rgba(20,8,50,.55);backdrop-filter:blur(2px)}
+.panel{background:linear-gradient(var(--ink-2),var(--ink));border:5px solid var(--gold);border-radius:28px;box-shadow:inset 0 0 0 3px #7a52d6,0 8px 0 var(--gold-dk),0 20px 40px #0007;
+  padding:20px 26px;max-width:min(1000px,100%);width:100%;max-height:100%;overflow:auto}
+.logo{font-family:var(--display);font-weight:800;text-align:center;line-height:.95;font-size:clamp(40px,8.5vh,92px);color:#fff;
+  text-shadow:0 5px 0 var(--gold-dk),4px 4px 0 #c0122f,-4px 4px 0 #1257c9}
+.logo span{color:var(--gold)}
+.h2{font-family:var(--display);font-weight:800;font-size:clamp(28px,4.6vh,44px);line-height:1;color:#fff;text-shadow:0 4px 0 var(--gold-dk)}
+.tag{text-align:center;font-weight:800;font-size:clamp(14px,2vh,20px);opacity:.92;margin:6px 0 14px}
+.seg{display:flex;gap:10px;justify-content:center;margin-bottom:14px;flex-wrap:wrap}
+.seg button{border:4px solid var(--gold);background:transparent;color:#fff;border-radius:18px;padding:6px 26px;font-weight:800;font-size:clamp(18px,2.6vh,26px)}
+.seg button.on{background:var(--gold);color:var(--ink)}
+.names{display:grid;grid-template-columns:repeat(var(--n,2),minmax(0,1fr));gap:12px;margin-bottom:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{display:grid;gap:4px;font-weight:800;font-size:15px;min-width:0}
+.field input,.field select{font:800 clamp(16px,2.2vh,22px) var(--display);padding:5px 12px;border-radius:12px;border:3px solid #fff3;background:#ffffff14;color:#fff;min-width:0;width:100%}
+.field input{border-color:var(--c1,#fff3)}
+.field select option{color:#000}
+.row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:14px}
+.howto{margin-top:12px;font-size:clamp(13px,1.7vh,16px);opacity:.92;text-align:center;line-height:1.5}
+.howto b{color:var(--gold)}
+
+/* editor */
+.tabs{display:flex;gap:8px;margin:10px 0 12px;flex-wrap:wrap}
+.tabs button{border:3px solid var(--gold);background:transparent;color:#fff;border-radius:12px;padding:4px 16px;font-weight:800;font-size:16px}
+.tabs button.on{background:var(--gold);color:var(--ink)}
+.qlist{display:grid;gap:12px}
+.qe{background:#ffffff10;border:2px solid #ffffff30;border-radius:16px;padding:10px 12px;display:grid;gap:8px}
+.qe.warn{border-color:#ffb020;background:#ffb02018}
+.qe .top{display:flex;gap:8px;align-items:center}
+.qe .n{font-family:var(--display);font-weight:800;color:var(--gold);font-size:20px;flex:none}
+.qe textarea,.qe input[type=text],#bulk{width:100%;font:700 17px var(--body);padding:6px 10px;border-radius:10px;border:2px solid #ffffff40;background:#fff;color:var(--ink);min-width:0}
+.qe textarea{resize:vertical;min-height:44px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.opt{display:flex;align-items:center;gap:6px;min-width:0}
+.opt label{display:flex;align-items:center;gap:4px;font-weight:900;flex:none;cursor:pointer}
+.opt input[type=radio]{width:20px;height:20px;accent-color:var(--ok)}
+.del{background:transparent;border:2px solid #ff8a9a;color:#ff8a9a;border-radius:10px;padding:2px 10px;font-weight:800;margin-left:auto}
+#bulk{min-height:280px;font-size:16px}
+.hint{font-size:15px;opacity:.9;line-height:1.55}
+.hint code{background:#fff2;padding:0 5px;border-radius:5px}
+.drop{display:grid;place-items:center;gap:8px;text-align:center;border:4px dashed var(--gold);border-radius:20px;padding:26px 16px;margin-top:12px;cursor:pointer;background:#ffffff0c}
+.drop.over{background:#ffc93c22}
+.drop .big{font-family:var(--display);font-weight:800;font-size:26px}
+.wordex{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
+.wordex div{background:#fff;color:#222;border-radius:12px;padding:10px 14px;font:600 15px/1.5 "Times New Roman",serif}
+.wordex .t{font:800 13px var(--body);color:var(--ink);opacity:.7;margin-bottom:4px}
+.msg{font-weight:800;margin-top:10px;min-height:1.3em}
+.msg.ok{color:#7dffa8}.msg.bad{color:#ffb4c0}
+
+/* connect */
+.qrs{display:grid;grid-template-columns:repeat(var(--n,2),minmax(0,1fr));gap:16px}
+.qrbox{border-radius:20px;padding:12px;text-align:center;display:grid;gap:8px;justify-items:center;background:var(--c2);min-width:0}
+.qrbox h3{margin:0;font-family:var(--display);font-size:26px;line-height:1.1}
+.qrimg{background:#fff;padding:10px;border-radius:14px;width:min(220px,100%);aspect-ratio:1;display:grid;place-items:center;color:var(--ink);font-weight:800;font-size:14px}
+.qrimg img,.qrimg canvas{width:100%!important;height:auto!important}
+.link{font-size:12px;word-break:break-all;opacity:.9;user-select:all}
+.status{font-weight:900;padding:2px 12px;border-radius:99px;background:#0003}
+.status.ok{background:var(--ok)}
+.weblink{display:grid;gap:6px;margin:0 auto 14px;max-width:640px}
+.weblink input{font:700 16px var(--body);padding:8px 12px;border-radius:12px;border:3px solid var(--gold);width:100%}
+.netstate{text-align:center;font-weight:800;margin-bottom:12px}
+
+/* end */
+.endtitle{font-family:var(--display);font-weight:800;text-align:center;font-size:clamp(38px,8.5vh,90px);line-height:1;text-shadow:0 5px 0 rgba(0,0,0,.35)}
+#confetti{position:absolute;inset:0;z-index:11;pointer-events:none;width:100%;height:100%}
+
+/* ---------- PHONE CONTROLLER ---------- */
+#ctrl{height:100%;display:flex;flex-direction:column;gap:12px;padding-block:14px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  background:linear-gradient(var(--c1),var(--c2))}
+.ch{display:flex;align-items:center;gap:10px;background:#0003;border-radius:20px;padding:8px 14px}
+.ch .nm{font-family:var(--display);font-weight:800;font-size:30px;line-height:1;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dot{width:14px;height:14px;border-radius:50%;background:#ffd0d0;flex:none}
+.dot.ok{background:#4ade80;box-shadow:0 0 10px #4ade80}
+.cq{background:#22124a;border:4px solid #ffc93c;border-radius:20px;padding:12px;font-family:var(--display);font-weight:800;font-size:22px;text-align:center;line-height:1.2;min-height:3em;display:grid;place-items:center}
+.cbtns{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:0}
+.cbtn{border:none;border-radius:24px;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:8px;
+  box-shadow:0 8px 0 rgba(0,0,0,.3);font-weight:800;min-width:0;transition:transform .15s,opacity .2s}
+.cbtn .L{font-size:56px;line-height:1}
+.cbtn .T{font-size:20px;line-height:1.1;font-family:var(--body);font-weight:900;overflow-wrap:anywhere}
+.cbtn:nth-child(1){background:var(--a)}.cbtn:nth-child(2){background:var(--b)}.cbtn:nth-child(3){background:var(--c)}.cbtn:nth-child(4){background:var(--d)}
+.cbtn:active{transform:translateY(5px);box-shadow:0 3px 0 rgba(0,0,0,.3)}
+.cbtn:disabled{opacity:.35}
+.cbtn.sel{opacity:1;outline:6px solid #fff;outline-offset:-6px}
+.cmsg{text-align:center;font-family:var(--display);font-weight:800;font-size:24px;min-height:1.3em}
+.choose{display:grid;gap:14px;flex:1;align-content:center}
+.choose button{border:4px solid #fff;border-radius:22px;color:#fff;font-weight:800;font-size:30px;padding:18px;box-shadow:0 6px 0 rgba(0,0,0,.3)}
+
+@media (max-width:760px){
+  .pads{display:none}.grid2,.opts,.wordex{grid-template-columns:1fr}
+  .hud,.names,.qrs{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){ .cloud,.sunrays,.eyes{animation:none!important} }
+</style>
+</head>
+<body>
+
+<div id="app" class="host">
+  <header class="hud" id="hud"></header>
+
+  <main class="stage" id="stage">
+    <svg id="scene" viewBox="0 0 1600 520" preserveAspectRatio="xMidYMax slice" aria-label="Sân kéo co"></svg>
+    <div class="pill">
+      <div class="qcount" id="qCount">Sẵn sàng!</div>
+      <div class="timer" id="timer">
+        <svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="18" fill="none" stroke="#ffffff25" stroke-width="6"/><circle id="ring" cx="22" cy="22" r="18" fill="none" stroke="#ffc93c" stroke-width="6" stroke-linecap="round" stroke-dasharray="113.1" stroke-dashoffset="0"/></svg>
+        <div class="num" id="timeNum">–</div>
+      </div>
+    </div>
+    <div class="banner" id="banner"></div>
+    <div class="toolbar">
+      <button id="btnMusic" title="Bật/tắt nhạc">🔊</button>
+      <button id="btnFull" title="Toàn màn hình">⛶</button>
+      <button id="btnHome" title="Về màn hình chính">🏠</button>
+    </div>
+  </main>
+
+  <section class="qcard" id="qcard">
+    <div class="fz">Cỡ chữ <button id="fzDown" title="Chữ nhỏ lại">A−</button><button id="fzUp" title="Chữ to lên">A+</button></div>
+    <div class="qtext" id="qText">Các đội đã sẵn sàng chưa nào?</div>
+    <div class="answers" id="answers"></div>
+    <div class="qctl" id="qctl"></div>
+  </section>
+
+  <!-- MENU -->
+  <div class="ov" id="menu">
+    <div class="panel">
+      <div class="logo">KÉO CO <span>TRI THỨC</span></div>
+      <div class="tag">Trả lời đúng và nhanh để kéo sợi dây về phía đội mình!</div>
+      <div class="seg" id="segTeams"><button data-n="2">2 đội</button><button data-n="3">3 đội</button></div>
+      <div class="names" id="names"></div>
+      <div class="grid2">
+        <label class="field">Thời gian mỗi câu
+          <select id="selTime"><option value="10">10 giây</option><option value="15">15 giây</option><option value="20">20 giây</option><option value="30">30 giây</option><option value="45">45 giây</option><option value="60">60 giây</option><option value="0">Không giới hạn</option></select></label>
+        <label class="field">Kéo bao nhiêu nấc thì thắng
+          <select id="selSteps"><option value="3">3 nấc (nhanh)</option><option value="4">4 nấc</option><option value="5">5 nấc (dài)</option></select></label>
+      </div>
+      <div class="row">
+        <button class="btn big" id="btnStart">▶ BẮT ĐẦU</button>
+        <button class="btn ghost" id="btnEdit">✏️ Soạn câu hỏi (<span id="qNum">0</span>)</button>
+        <button class="btn ghost" id="btnConnect">📱 Kết nối điện thoại</button>
+      </div>
+      <div class="howto" id="howto"></div>
+    </div>
+  </div>
+
+  <!-- EDITOR -->
+  <div class="ov" id="editor" hidden>
+    <div class="panel">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div class="h2">Soạn câu hỏi</div>
+        <button class="btn" id="edSave" style="margin-left:auto">💾 Lưu &amp; đóng</button>
+      </div>
+      <div class="tabs"><button class="on" data-tab="form">Từng câu</button><button data-tab="word">📄 Nhập từ Word</button><button data-tab="bulk">Dán nhanh cả đề</button></div>
+      <div id="tabForm">
+        <div class="hint">Gõ câu hỏi và 2–4 đáp án. Bấm vào chấm tròn để chọn <b>đáp án đúng</b>. Ô đáp án nào để trống sẽ không hiện. Câu có <b style="color:#ffb020">viền cam</b> là câu chưa rõ đáp án đúng, thầy cô xem lại nhé.</div>
+        <div class="qlist" id="qlist" style="margin-top:10px"></div>
+        <div class="row">
+          <button class="btn ghost" id="edAdd">＋ Thêm câu hỏi</button>
+          <span id="resetBox"></span>
+        </div>
+      </div>
+      <div id="tabWord" hidden>
+        <div class="hint">Chọn file Word (.docx) có các câu trắc nghiệm. Đánh dấu <b>đáp án đúng</b> bằng một trong các cách: <b>in đậm</b>, <b>gạch chân</b>, <b>tô màu đỏ</b>, <b>tô nền</b>, thêm dấu <code>*</code> trước đáp án, hoặc thêm dòng <code>Đáp án: B</code> sau câu hỏi.</div>
+        <div class="wordex">
+          <div><div class="t">Ví dụ 1: đáp án mỗi dòng</div>Câu 1: 6 × 7 = ?<br>A. 36<br><b><u>B. 42</u></b><br>C. 48<br>D. 49</div>
+          <div><div class="t">Ví dụ 2: đáp án chung một dòng</div>Câu 2: 56 : 7 = ?<br>A. 6 &nbsp;&nbsp; B. 7 &nbsp;&nbsp; C. 8 &nbsp;&nbsp; D. 9<br>Đáp án: C</div>
+        </div>
+        <label class="drop" id="drop"><input type="file" id="wordFile" accept=".docx" hidden>
+          <span style="font-size:44px">📄</span><span class="big">Bấm để chọn file Word</span><span>hoặc kéo thả file .docx vào đây</span></label>
+        <div class="msg" id="wordMsg"></div>
+        <div class="row" id="wordAct" hidden>
+          <button class="btn" id="wordReplace">✔ Thay toàn bộ bằng các câu này</button>
+          <button class="btn ghost" id="wordAppend">＋ Thêm vào sau các câu đang có</button>
+        </div>
+      </div>
+      <div id="tabBulk" hidden>
+        <div class="hint">Dán cả đề vào đây. Có thể dùng mẫu như file Word ở trên, hoặc mỗi câu cách nhau <b>một dòng trống</b>: dòng đầu là câu hỏi, các dòng sau là đáp án, đặt dấu <code>*</code> trước đáp án đúng.</div>
+        <textarea id="bulk" style="margin-top:10px"></textarea>
+        <div class="row"><button class="btn" id="bulkApply">✔ Dùng đề này</button></div>
+        <div class="msg" id="bulkMsg"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONNECT -->
+  <div class="ov" id="connect" hidden>
+    <div class="panel">
+      <div class="h2" style="text-align:center">📱 Kết nối điện thoại</div>
+      <div class="tag">Mỗi đội dùng 1 điện thoại. Mở camera, quét mã của đội mình là điện thoại thành bảng bấm A B C D.</div>
+      <div class="netstate" id="netState">Đang chuẩn bị kết nối…</div>
+      <div class="weblink" id="webLinkBox" hidden>
+        <label class="field">Dán đường link game trên GitHub vào đây (ví dụ https://thaybo.github.io/keoco/)
+          <input id="webLink" type="url" placeholder="https://…github.io/…/"></label>
+      </div>
+      <div class="qrs" id="qrs"></div>
+      <div class="howto">Máy chiếu và điện thoại đều cần có mạng (Wi-Fi hoặc 4G). Nếu Wi-Fi trường chặn, hãy cho điện thoại dùng 4G.<br>
+        Mất mạng vẫn chơi được bằng bàn phím: <span id="keyHelp"></span>.</div>
+      <div class="row"><button class="btn big" id="connClose">Xong</button></div>
+    </div>
+  </div>
+
+  <!-- END -->
+  <div class="ov" id="end" hidden style="background:rgba(20,8,50,.3)">
+    <div class="panel" style="max-width:720px;text-align:center">
+      <div class="endtitle" id="endTitle">ĐỘI ĐỎ THẮNG!</div>
+      <div class="tag" id="endSub" style="font-size:22px"></div>
+      <div class="row"><button class="btn big" id="btnAgain">↻ Chơi lại</button><button class="btn ghost" id="btnEndHome">🏠 Màn hình chính</button></div>
+    </div>
+  </div>
+  <canvas id="confetti"></canvas>
+</div>
+
+<div id="ctrl" hidden>
+  <div class="ch"><span class="dot" id="cDot"></span><span class="nm" id="cName">Đội</span><span id="cQ" style="font-weight:900">–</span></div>
+  <div class="cq" id="cQText">Đang kết nối với máy chiếu…</div>
+  <div class="cbtns" id="cBtns"></div>
+  <div class="cmsg" id="cMsg"></div>
+</div>
+
+<script>
+/* ======================= DATA ======================= */
+const ARTIFACT_URL = "https://claude.ai/artifact/7X9ySGqDWTTHv23MzqVhNy";
+const LS_Q = "kct_questions_v1", LS_S = "kct_settings_v2", LS_ROOM = "kct_room_v1";
+const SAMPLE = [
+  {q:"6 × 7 = ?", a:["36","42","48","49"], c:1},
+  {q:"56 : 7 = ?", a:["6","7","8","9"], c:2},
+  {q:"Gấp 8 lên 6 lần được bao nhiêu?", a:["48","14","54","2"], c:0},
+  {q:"Giảm 35 đi 5 lần được bao nhiêu?", a:["30","40","175","7"], c:3},
+  {q:"Mỗi hộp có 6 cái bánh. 5 hộp như thế có bao nhiêu cái bánh?", a:["11 cái","25 cái","30 cái","35 cái"], c:2},
+  {q:"7 × 9 = ?", a:["63","56","72","54"], c:0},
+  {q:"Số nào nhân với 7 thì được 49?", a:["6","7","8","9"], c:1},
+  {q:"1 giờ = ? phút", a:["100 phút","24 phút","30 phút","60 phút"], c:3},
+  {q:"42 : 6 = ?", a:["8","6","7","9"], c:2},
+  {q:"Có 28 quả cam chia đều vào 4 giỏ. Mỗi giỏ có mấy quả?", a:["6 quả","7 quả","8 quả","24 quả"], c:1}
+];
+const LETTERS = ["A","B","C","D"];
+const FZ = [0.8, 1, 1.2, 1.4, 1.65, 1.9];
+const TEAMDEF = {
+  red:   {name:"Đội Đỏ",  c1:"#ff4057", c2:"#c0122f", keys:["1","2","3","4"], kl:"1 2 3 4", tag:"doido",
+          animals:[{k:"cat",head:"#ffb04a",ear:"#ff8a1f"},{k:"bear",head:"#c98b5a",ear:"#9c6438"},{k:"bunny",head:"#fff3e3",ear:"#ffc9d6"}]},
+  blue:  {name:"Đội Xanh", c1:"#2b8cff", c2:"#1257c9", keys:["7","8","9","0"], kl:"7 8 9 0", tag:"doixanh",
+          animals:[{k:"bunny",head:"#f2f3ff",ear:"#cfd8ff"},{k:"cat",head:"#a7b2c6",ear:"#7e8aa3"},{k:"bear",head:"#8d6b52",ear:"#6a4c37"}]},
+  purple:{name:"Đội Tím",  c1:"#a855f7", c2:"#6d28d9", keys:["q","w","e","r"], kl:"Q W E R", tag:"doitim",
+          animals:[{k:"bear",head:"#f6c6a8",ear:"#e8957a"},{k:"bunny",head:"#ffe9f3",ear:"#ffb3d1"},{k:"cat",head:"#8a8399",ear:"#ff9ec4"}]}
+};
+function load(k){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : null }catch(e){ return null } }
+function save(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)) }catch(e){} }
+const clone = o => JSON.parse(JSON.stringify(o));
+let questions = load(LS_Q) || clone(SAMPLE);
+let settings = Object.assign({teams:2, time:20, steps:3, music:true, fz:1, webLink:"", names:{red:"Đội Đỏ", blue:"Đội Xanh", purple:"Đội Tím"}}, load(LS_S) || {});
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const teamList = () => settings.teams === 3 ? ["red","purple","blue"] : ["red","blue"];
+const tname = t => settings.names[t] || TEAMDEF[t].name;
+const saveSettings = () => save(LS_S, settings);
+
+const PARAMS = new URLSearchParams(location.search);
+const HASH = location.hash.replace("#","");
+const TAG2TEAM = {doido:"red", doixanh:"blue", doitim:"purple"};
+const JOIN = PARAMS.get("join");
+const CTRL = JOIN ? (TEAMDEF[PARAMS.get("team")] ? PARAMS.get("team") : "?") : (TAG2TEAM[HASH] || null);
+
+/* ======================= AUDIO ======================= */
+const A = {ctx:null, master:null, music:null, sfx:null, timer:null, step:0, next:0};
+function audioInit(){
+  if (A.ctx) { if (A.ctx.state === "suspended") A.ctx.resume(); return; }
+  const C = window.AudioContext || window.webkitAudioContext; if (!C) return;
+  A.ctx = new C();
+  const comp = A.ctx.createDynamicsCompressor(); comp.threshold.value = -14; comp.ratio.value = 4; comp.connect(A.ctx.destination);
+  A.master = A.ctx.createGain(); A.master.gain.value = 1; A.master.connect(comp);
+  A.music = A.ctx.createGain(); A.music.gain.value = 0.62; A.music.connect(A.master);
+  A.sfx = A.ctx.createGain(); A.sfx.gain.value = 0.9; A.sfx.connect(A.master);
+}
+const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+function tone(f, t, dur, type, vol, dest){
+  const o = A.ctx.createOscillator(), g = A.ctx.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, t);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(dest || A.sfx); o.start(t); o.stop(t + dur + 0.05); return o;
+}
+let noiseBuf = null;
+function noise(t, dur, vol, freq, dest){
+  if (!noiseBuf){ noiseBuf = A.ctx.createBuffer(1, A.ctx.sampleRate, A.ctx.sampleRate); const d = noiseBuf.getChannelData(0); for (let i=0;i<d.length;i++) d[i] = Math.random()*2-1; }
+  const s = A.ctx.createBufferSource(); s.buffer = noiseBuf;
+  const f = A.ctx.createBiquadFilter(); f.type = "highpass"; f.frequency.value = freq;
+  const g = A.ctx.createGain(); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  s.connect(f); f.connect(g); g.connect(dest || A.sfx); s.start(t); s.stop(t + dur + 0.02);
+}
+function kick(t){ const o = A.ctx.createOscillator(), g = A.ctx.createGain(); o.frequency.setValueAtTime(150, t); o.frequency.exponentialRampToValueAtTime(45, t+0.14);
+  g.gain.setValueAtTime(0.9, t); g.gain.exponentialRampToValueAtTime(0.0001, t+0.2); o.connect(g); g.connect(A.music); o.start(t); o.stop(t+0.22); }
+const MEL = [72,0,76,79,76,0,72,74, 74,0,79,83,79,0,74,71, 72,0,76,81,79,76,74,72, 74,77,76,74,72,0,0,0,
+             79,79,81,79,76,0,72,0, 74,74,76,74,71,0,67,0, 69,72,76,72,77,76,74,72, 74,0,76,0,79,0,0,0];
+const ROOTS = [48,43,45,41, 48,43,45,43];
+const CHORD = {48:[60,64,67],43:[59,62,67],45:[60,64,69],41:[60,65,69]};
+function schedStep(i, t){
+  const e = 60/152/2, bar = Math.floor(i/8) % 8, s = i % 8, root = ROOTS[bar];
+  const m = MEL[i % 64]; if (m){ tone(mtof(m), t, e*0.9, "square", 0.09, A.music); tone(mtof(m-12), t, e*0.9, "triangle", 0.12, A.music); }
+  tone(mtof(s % 2 ? root+12 : root), t, e*0.85, "sawtooth", 0.09, A.music);
+  if (s % 2 === 0) kick(t);
+  if (s === 2 || s === 6) noise(t, 0.16, 0.38, 1800, A.music);
+  if (s % 2 === 1) noise(t, 0.05, 0.16, 7000, A.music);
+  if (s === 0 || s === 3 || s === 6) CHORD[root].forEach(n => tone(mtof(n), t, e*0.6, "triangle", 0.045, A.music));
+}
+function musicStart(){
+  if (!A.ctx || A.timer) return;
+  A.next = A.ctx.currentTime + 0.08;
+  A.timer = setInterval(() => { const e = 60/152/2; while (A.next < A.ctx.currentTime + 0.15){ schedStep(A.step++, A.next); A.next += e; } }, 25);
+}
+function musicStop(){ clearInterval(A.timer); A.timer = null; }
+function syncMusic(){ if (settings.music && A.ctx) musicStart(); else musicStop(); $("btnMusic").textContent = settings.music ? "🔊" : "🔇"; }
+const SFX = {
+  tick(){ if(!A.ctx) return; tone(1320, A.ctx.currentTime, 0.08, "square", 0.25); },
+  go(){ if(!A.ctx) return; const t=A.ctx.currentTime; tone(880,t,.15,"square",.3); tone(1760,t+.12,.3,"square",.3); },
+  count(){ if(!A.ctx) return; tone(660, A.ctx.currentTime, 0.18, "square", 0.32); },
+  lock(){ if(!A.ctx) return; const t=A.ctx.currentTime; tone(520,t,.08,"sine",.5); tone(780,t+.06,.12,"sine",.5); },
+  right(){ if(!A.ctx) return; const t=A.ctx.currentTime; [72,76,79,84].forEach((n,i)=>tone(mtof(n),t+i*.08,.3,"square",.28)); },
+  wrong(){ if(!A.ctx) return; const t=A.ctx.currentTime; const o=tone(300,t,.5,"sawtooth",.3); o.frequency.exponentialRampToValueAtTime(110,t+.5); },
+  pull(){ if(!A.ctx) return; const t=A.ctx.currentTime; noise(t,.5,.5,600); [0,.25,.5].forEach(d=>{const o=tone(180,t+d,.18,"square",.35); o.frequency.exponentialRampToValueAtTime(320,t+d+.15);}); },
+  win(){ if(!A.ctx) return; const t=A.ctx.currentTime; [60,64,67,72,67,72,76,79,84].forEach((n,i)=>{tone(mtof(n),t+i*.11,.4,"square",.26); tone(mtof(n-12),t+i*.11,.4,"triangle",.3);}); noise(t+1,.8,.4,3000); }
+};
+
+/* ======================= ART ======================= */
+const OUT = "#3a2340";
+function ears(a){
+  if (a.k === "cat") return `<path d="M-30,-160 L-36,-196 L-6,-172Z M14,-172 L40,-198 L38,-160Z" fill="${a.head}" stroke="${OUT}" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M-28,-168 L-31,-186 L-15,-174Z M22,-172 L35,-187 L34,-166Z" fill="${a.ear}"/>`;
+  if (a.k === "bear") return `<circle cx="-26" cy="-166" r="15" fill="${a.head}" stroke="${OUT}" stroke-width="4"/><circle cx="30" cy="-166" r="15" fill="${a.head}" stroke="${OUT}" stroke-width="4"/>
+    <circle cx="-26" cy="-166" r="7" fill="${a.ear}"/><circle cx="30" cy="-166" r="7" fill="${a.ear}"/>`;
+  return `<ellipse cx="-12" cy="-196" rx="11" ry="32" transform="rotate(-14 -12 -196)" fill="${a.head}" stroke="${OUT}" stroke-width="4"/>
+    <ellipse cx="18" cy="-198" rx="11" ry="32" transform="rotate(12 18 -198)" fill="${a.head}" stroke="${OUT}" stroke-width="4"/>
+    <ellipse cx="-12" cy="-194" rx="5" ry="22" transform="rotate(-14 -12 -194)" fill="${a.ear}"/><ellipse cx="18" cy="-196" rx="5" ry="22" transform="rotate(12 18 -196)" fill="${a.ear}"/>`;
+}
+function sideHead(a, tk){
+  const c1 = TEAMDEF[tk].c1;
+  return `${ears(a)}
+    <circle cx="4" cy="-134" r="40" fill="${a.head}" stroke="${OUT}" stroke-width="4"/>
+    <ellipse cx="22" cy="-118" rx="16" ry="11" fill="#fff" opacity=".55"/>
+    <rect x="-36" y="-164" width="80" height="13" rx="6" fill="${c1}" stroke="${OUT}" stroke-width="3"/>
+    <path d="M-34,-160 L-56,-170 L-50,-150Z M-34,-156 L-54,-142 L-44,-136Z" fill="${c1}" stroke="${OUT}" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M6,-146 L22,-140 M30,-140 L44,-146" stroke="${OUT}" stroke-width="5" stroke-linecap="round"/>
+    <g class="eyes"><ellipse cx="14" cy="-128" rx="8" ry="10" fill="#fff" stroke="${OUT}" stroke-width="3"/><ellipse cx="36" cy="-128" rx="8" ry="10" fill="#fff" stroke="${OUT}" stroke-width="3"/>
+    <circle cx="17" cy="-127" r="5" fill="#2a1638"/><circle cx="39" cy="-127" r="5" fill="#2a1638"/><circle cx="19" cy="-129" r="1.8" fill="#fff"/><circle cx="41" cy="-129" r="1.8" fill="#fff"/></g>
+    <circle cx="2" cy="-114" r="7" fill="#ff7aa2" opacity=".6"/><circle cx="44" cy="-112" r="6" fill="#ff7aa2" opacity=".6"/>
+    <path d="M18,-110 Q27,-112 34,-108 Q30,-97 22,-99 Q17,-102 18,-110Z" fill="#7a1d3a" stroke="${OUT}" stroke-width="3" stroke-linejoin="round"/>`;
+}
+function frontHead(a, tk){
+  const c1 = TEAMDEF[tk].c1;
+  return `<g transform="translate(-4 2)">${ears(a)}</g>
+    <circle cx="0" cy="-132" r="40" fill="${a.head}" stroke="${OUT}" stroke-width="4"/>
+    <ellipse cx="0" cy="-112" rx="18" ry="11" fill="#fff" opacity=".5"/>
+    <rect x="-40" y="-162" width="80" height="13" rx="6" fill="${c1}" stroke="${OUT}" stroke-width="3"/>
+    <path d="M-24,-144 L-8,-139 M24,-144 L8,-139" stroke="${OUT}" stroke-width="5" stroke-linecap="round"/>
+    <g class="eyes"><ellipse cx="-14" cy="-127" rx="8" ry="10" fill="#fff" stroke="${OUT}" stroke-width="3"/><ellipse cx="14" cy="-127" rx="8" ry="10" fill="#fff" stroke="${OUT}" stroke-width="3"/>
+    <circle cx="-14" cy="-124" r="5" fill="#2a1638"/><circle cx="14" cy="-124" r="5" fill="#2a1638"/><circle cx="-12" cy="-126" r="1.8" fill="#fff"/><circle cx="16" cy="-126" r="1.8" fill="#fff"/></g>
+    <circle cx="-27" cy="-112" r="7" fill="#ff7aa2" opacity=".6"/><circle cx="27" cy="-112" r="7" fill="#ff7aa2" opacity=".6"/>
+    <ellipse cx="0" cy="-106" rx="8" ry="7" fill="#7a1d3a" stroke="${OUT}" stroke-width="3"/>`;
+}
+function sideCritter(a, tk, num, flip){
+  const {c1, c2} = TEAMDEF[tk];
+  return `<ellipse cx="2" cy="0" rx="40" ry="8" fill="#000" opacity=".18"/>
+    <rect x="-22" y="-36" width="16" height="36" rx="8" fill="${a.head}" stroke="${OUT}" stroke-width="4"/>
+    <rect x="6" y="-36" width="16" height="36" rx="8" fill="${a.head}" stroke="${OUT}" stroke-width="4"/>
+    <ellipse cx="-10" cy="-2" rx="16" ry="8" fill="${OUT}"/><ellipse cx="18" cy="-2" rx="16" ry="8" fill="${OUT}"/>
+    <path d="M-6,-80 L44,-95" stroke="${OUT}" stroke-width="18" stroke-linecap="round"/><path d="M-6,-80 L44,-95" stroke="${a.head}" stroke-width="11" stroke-linecap="round"/>
+    <ellipse cx="0" cy="-64" rx="34" ry="38" fill="${c1}" stroke="${OUT}" stroke-width="4"/>
+    <path d="M-30,-80 Q0,-70 30,-80" stroke="${c2}" stroke-width="6" fill="none"/>
+    <text x="0" y="-48" ${flip ? 'transform="scale(-1 1)"' : ""} text-anchor="middle" font-family="Baloo 2, sans-serif" font-weight="800" font-size="30" fill="#fff" stroke="${c2}" stroke-width="1.5">${num}</text>
+    ${sideHead(a, tk)}
+    <path d="M6,-84 L50,-98" stroke="${OUT}" stroke-width="18" stroke-linecap="round"/><path d="M6,-84 L50,-98" stroke="${a.head}" stroke-width="11" stroke-linecap="round"/>
+    <circle cx="50" cy="-98" r="10" fill="${a.head}" stroke="${OUT}" stroke-width="4"/>`;
+}
+function frontCritter(a, tk, num){
+  const {c1, c2} = TEAMDEF[tk];
+  return `<ellipse cx="0" cy="0" rx="40" ry="9" fill="#000" opacity=".18"/>
+    <rect x="-22" y="-36" width="16" height="36" rx="8" fill="${a.head}" stroke="${OUT}" stroke-width="4"/>
+    <rect x="6" y="-36" width="16" height="36" rx="8" fill="${a.head}" stroke="${OUT}" stroke-width="4"/>
+    <ellipse cx="-16" cy="-2" rx="13" ry="8" fill="${OUT}"/><ellipse cx="16" cy="-2" rx="13" ry="8" fill="${OUT}"/>
+    <ellipse cx="0" cy="-64" rx="36" ry="37" fill="${c1}" stroke="${OUT}" stroke-width="4"/>
+    <path d="M-32,-80 Q0,-70 32,-80" stroke="${c2}" stroke-width="6" fill="none"/>
+    <text x="0" y="-44" text-anchor="middle" font-family="Baloo 2, sans-serif" font-weight="800" font-size="28" fill="#fff" stroke="${c2}" stroke-width="1.5">${num}</text>
+    ${frontHead(a, tk)}
+    <path d="M-30,-84 L-12,-74 M30,-84 L12,-74" stroke="${OUT}" stroke-width="18" stroke-linecap="round"/>
+    <path d="M-30,-84 L-12,-74 M30,-84 L12,-74" stroke="${a.head}" stroke-width="11" stroke-linecap="round"/>`;
+}
+const frontHands = a => `<circle cx="-11" cy="-74" r="10" fill="${a.head}" stroke="${OUT}" stroke-width="4"/><circle cx="11" cy="-74" r="10" fill="${a.head}" stroke="${OUT}" stroke-width="4"/>`;
+function cloud(x, y, s, dur, delay){
+  return `<g class="cloud" style="animation-duration:${dur}s;animation-delay:${delay}s"><g transform="translate(${x} ${y}) scale(${s})" fill="#fff" opacity=".95">
+    <ellipse cx="0" cy="0" rx="60" ry="26"/><circle cx="-26" cy="-12" r="26"/><circle cx="14" cy="-24" r="34"/><circle cx="46" cy="-6" r="22"/></g></g>`;
+}
+
+/* ======================= SCENE (live, JS-animated) ======================= */
+const SC = {G:430, base:1, sq:0.45, teams:{}, p:{x:0,z:0}, v:{x:0,z:0}, target:{x:0,z:0}, step:100, ring:null, raf:0};
+const NS = "http://www.w3.org/2000/svg";
+const W2S = (x, z) => [800 + x, SC.G + z * SC.sq];
+const scaleAt = z => SC.base + z * 0.0007;
+function svgEl(tag, attrs, html){ const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (html != null) e.innerHTML = html; return e; }
+
+function buildScene(){
+  const three = settings.teams === 3, N = settings.steps;
+  SC.G = 430; SC.sq = three ? 0.6 : 0.45; SC.base = three ? 0.92 : 1;
+  SC.step = three ? Math.min(62, 240 / N) : Math.min(100, 440 / N);
+  const cfg = three ? {
+    red:   {dir:[-0.94, 0.34], d:[180, 275, 370], view:"side", flip:1},
+    blue:  {dir:[ 0.94, 0.34], d:[180, 275, 370], view:"side", flip:-1},
+    purple:{dir:[0, -1],       d:[95, 165, 235], view:"front", flip:1, xo:[0, 36, -36]}
+  } : {
+    red:  {dir:[-1, 0], d:[240, 355, 470], view:"side", flip:1},
+    blue: {dir:[ 1, 0], d:[240, 355, 470], view:"side", flip:-1}
+  };
+  const sc = $("scene"); sc.innerHTML = "";
+  // ---------- static background ----------
+  const fc = ["#ff4057","#ffc93c","#2b8cff","#22c55e","#a855f7"];
+  let flags = ""; for (let i=0;i<34;i++){ const x = i*50; flags += `<path d="M${x},18 L${x+50},18 L${x+25},54Z" fill="${fc[i%5]}" stroke="${OUT}" stroke-width="2"/>`; }
+  const hill1 = three ? "M0,230 Q200,150 420,210 T860,200 T1300,190 T1600,200 V520 H0Z" : "M0,330 Q200,230 420,310 T860,300 T1300,290 T1600,300 V520 H0Z";
+  const hill2 = three ? "M0,250 Q260,200 520,240 T1040,235 T1600,232 V520 H0Z" : "M0,360 Q260,300 520,350 T1040,345 T1600,340 V520 H0Z";
+  const grassY = three ? 215 : 390;
+  let marks = "";
+  teamList().forEach(tk => {
+    const c = cfg[tk], col = TEAMDEF[tk].c1;
+    for (let k=1;k<=N;k++){
+      const [x, y] = W2S(c.dir[0]*k*SC.step, c.dir[1]*k*SC.step), s = scaleAt(c.dir[1]*k*SC.step), end = k === N;
+      if (!end) marks += `<g transform="translate(${x} ${y}) scale(${s})"><rect x="-3" y="-30" width="6" height="30" rx="2" fill="#5b3b1f"/><circle cx="0" cy="-32" r="7" fill="${col}" stroke="${OUT}" stroke-width="2"/></g>`;
+      else marks += `<g transform="translate(${x} ${y}) scale(${s})"><rect x="-4" y="-74" width="8" height="78" rx="3" fill="#5b3b1f"/>
+        <path d="M4,-74 L70,-60 L4,-44Z" fill="${col}" stroke="${OUT}" stroke-width="3" stroke-linejoin="round"/>
+        <text x="32" y="-54" text-anchor="middle" font-family="Baloo 2, sans-serif" font-weight="800" font-size="16" fill="#fff">ĐÍCH</text>
+        <ellipse cx="0" cy="3" rx="26" ry="6" fill="${col}" opacity=".55"/></g>`;
+    }
+  });
+  const [mx, my] = W2S(0, 0);
+  const mud = three ? `<ellipse cx="${mx}" cy="${my+8}" rx="130" ry="46" fill="url(#mud)" stroke="#4a2810" stroke-width="4"/>` :
+    `<ellipse cx="800" cy="452" rx="125" ry="26" fill="url(#mud)" stroke="#4a2810" stroke-width="4"/>`;
+  sc.innerHTML = `
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3fb8ff"/><stop offset="1" stop-color="#c6f0ff"/></linearGradient>
+    <linearGradient id="grass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7be052"/><stop offset="1" stop-color="#2f9e2a"/></linearGradient>
+    <pattern id="stripes" width="120" height="200" patternUnits="userSpaceOnUse"><rect width="60" height="200" fill="#fff" opacity=".07"/></pattern>
+    <linearGradient id="mud" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9a6234"/><stop offset="1" stop-color="#5e3517"/></linearGradient>
+  </defs>
+  <rect width="1600" height="520" fill="url(#sky)"/>
+  <g transform="translate(1390 ${three ? 95 : 110}) scale(${three ? .8 : 1})"><g class="sunrays">${Array.from({length:12},(_,i)=>`<rect x="-6" y="-120" width="12" height="40" rx="6" fill="#ffe66b" transform="rotate(${i*30})"/>`).join("")}</g>
+    <circle r="62" fill="#ffd93b" stroke="#ffb703" stroke-width="6"/><circle cx="-20" cy="-8" r="6" fill="#7a3d00"/><circle cx="20" cy="-8" r="6" fill="#7a3d00"/><path d="M-22,14 Q0,34 22,14" stroke="#7a3d00" stroke-width="6" fill="none" stroke-linecap="round"/></g>
+  ${cloud(0,120,1,60,-10)}${cloud(0,75,.7,80,-45)}${three ? "" : cloud(0,170,.85,70,-30)}
+  <path d="${hill1}" fill="#8fe06a"/><path d="${hill2}" fill="#64c94a"/>
+  <g>${flags}</g><path d="M0,18 H1700" stroke="${OUT}" stroke-width="3"/>
+  <rect y="${grassY}" width="1600" height="${520-grassY}" fill="url(#grass)"/><rect y="${grassY}" width="1600" height="${520-grassY}" fill="url(#stripes)"/>
+  ${mud}
+  <ellipse cx="${mx-30}" cy="${three ? my+2 : 446}" rx="14" ry="5" fill="#b77a45"/><ellipse cx="${mx+40}" cy="${three ? my+16 : 456}" rx="10" ry="4" fill="#b77a45"/>
+  ${three ? "" : `<rect x="796" y="400" width="8" height="70" fill="#fff" opacity=".9"/>`}
+  ${marks}`;
+  // ---------- live layers ----------
+  SC.teams = {};
+  const L = (name) => { const g = svgEl("g", {id:name}); sc.appendChild(g); return g; };
+  const backBodies = L("backBodies"), backRope = L("backRope"), backHands = L("backHands"), ropes = L("ropes"), ringL = L("ringL"), bodies = L("bodies");
+  const order = [];
+  teamList().forEach(tk => {
+    const c = cfg[tk], T = TEAMDEF[tk];
+    const team = {tk, ...c, members:[], state:"idle", until:0, phase:Math.random()*6};
+    const ropeG = svgEl("g", {});
+    team.ropePaths = [
+      svgEl("path", {fill:"none", stroke:"#5a3511", "stroke-linecap":"round", "stroke-linejoin":"round"}),
+      svgEl("path", {fill:"none", stroke:"#d39a4f", "stroke-linecap":"round", "stroke-linejoin":"round"}),
+      svgEl("path", {fill:"none", stroke:"#f4d496", "stroke-linecap":"butt"}),
+      svgEl("path", {fill:"none", stroke:"#9a6226", "stroke-linecap":"butt"})
+    ];
+    team.ropePaths.forEach(p => ropeG.appendChild(p));
+    (c.view === "front" ? backRope : ropes).appendChild(ropeG);
+    c.d.forEach((d, i) => {
+      const a = T.animals[i];
+      const outer = svgEl("g", {}), inner = svgEl("g", {});
+      inner.innerHTML = c.view === "front" ? frontCritter(a, tk, i+1) : sideCritter(a, tk, i+1, c.flip < 0);
+      outer.appendChild(inner);
+      const m = {d, i, outer, inner, a:-10, y:0, sqz:1, xo:(c.xo ? c.xo[i] : 0)};
+      if (c.view === "front"){
+        backBodies.insertBefore(outer, backBodies.firstChild); // farther ones first
+        m.handsOuter = svgEl("g", {}); m.handsInner = svgEl("g", {}, frontHands(a)); m.handsOuter.appendChild(m.handsInner);
+        backHands.appendChild(m.handsOuter);
+      } else order.push({m, z: c.dir[1]*d});
+      team.members.push(m);
+    });
+    SC.teams[tk] = team;
+  });
+  order.sort((p, q) => p.z - q.z).forEach(o => bodies.appendChild(o.m.outer));
+  SC.ring = svgEl("g", {}, `<path d="M0,6 L-20,56 L20,56Z" fill="#ffc93c" stroke="${OUT}" stroke-width="4" stroke-linejoin="round"/><circle cy="34" r="8" fill="#ff4057"/>
+    <circle r="15" fill="none" stroke="${OUT}" stroke-width="10"/><circle r="15" fill="none" stroke="#c9ced8" stroke-width="5"/>`);
+  ringL.appendChild(SC.ring);
+  SC.splash = svgEl("g", {class:"splash"}, `<circle cx="-40" cy="-10" r="14" fill="#7a4a22"/><circle cx="40" cy="-20" r="18" fill="#7a4a22"/><circle cx="0" cy="-40" r="12" fill="#8c5a2b"/><circle cx="-80" cy="-30" r="9" fill="#8c5a2b"/><circle cx="80" cy="-40" r="10" fill="#7a4a22"/>`);
+  SC.splash.setAttribute("transform", `translate(${mx} ${my})`);
+  sc.appendChild(SC.splash);
+  syncTarget(true); renderPips();
+  if (!SC.raf) SC.raf = requestAnimationFrame(frame);
+}
+function syncTarget(instant){
+  let x = 0, z = 0;
+  teamList().forEach(tk => { const c = SC.teams[tk]; if (!c) return; const k = S.score[tk] || 0; x += c.dir[0]*k*SC.step; z += c.dir[1]*k*SC.step; });
+  SC.target = {x, z};
+  if (instant){ SC.p = {x, z}; SC.v = {x:0, z:0}; }
+}
+function setTeamState(tk, state, ms){ const t = SC.teams[tk]; if (!t) return; t.state = state; t.until = ms ? performance.now() + ms : 0; }
+const rot = (x, y, deg) => { const r = deg * Math.PI/180, c = Math.cos(r), s = Math.sin(r); return [x*c - y*s, x*s + y*c]; };
+function ropePath(pts, sagK, tail){
+  let d = `M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
+  for (let i=1;i<pts.length;i++){
+    const A = pts[i-1], B = pts[i], dist = Math.hypot(B[0]-A[0], B[1]-A[1]);
+    const sag = sagK * dist * (i === 1 ? 0.8 : 1);
+    const cx = (A[0]+B[0])/2, cy = (A[1]+B[1])/2 + 2*sag;
+    d += ` Q${cx.toFixed(1)},${cy.toFixed(1)} ${B[0].toFixed(1)},${B[1].toFixed(1)}`;
+  }
+  const [H, T1, T2, dir] = tail;
+  d += ` C${(H[0]+dir[0]*40).toFixed(1)},${(H[1]+dir[1]*40+12).toFixed(1)} ${(T1[0]-dir[0]*30).toFixed(1)},${(T1[1]-8).toFixed(1)} ${T1[0].toFixed(1)},${T1[1].toFixed(1)}`;
+  d += ` Q${((T1[0]+T2[0])/2 + dir[1]*10).toFixed(1)},${((T1[1]+T2[1])/2 + 6).toFixed(1)} ${T2[0].toFixed(1)},${T2[1].toFixed(1)}`;
+  return d;
+}
+function frame(now){
+  SC.raf = requestAnimationFrame(frame);
+  const t = now / 1000;
+  // spring the whole rope system toward its target
+  ["x","z"].forEach(k => { SC.v[k] = (SC.v[k] + (SC.target[k] - SC.p[k]) * 0.07) * 0.8; SC.p[k] += SC.v[k]; });
+  const P = SC.p, ringS = scaleAt(P.z), [rgx, rgy] = W2S(P.x, P.z);
+  const R = [rgx, rgy - 99 * ringS];
+  SC.ring.setAttribute("transform", `translate(${R[0].toFixed(1)} ${R[1].toFixed(1)}) scale(${ringS.toFixed(3)})`);
+  for (const tk in SC.teams){
+    const T = SC.teams[tk];
+    if (T.until && now > T.until){ T.state = "idle"; T.until = 0; }
+    const pts = [R];
+    let lastFeet = null, s0 = 1;
+    T.members.forEach((m, i) => {
+      const wx = P.x + T.dir[0]*m.d, wz = P.z + T.dir[1]*m.d, s = scaleAt(wz);
+      let [sx, sy] = W2S(wx, wz); sx += m.xo * s;
+      const ph = T.phase + i * 0.9;
+      let ta = -10 + 3.5*Math.sin(t*6.5 + ph), ty = 0, tsq = 1, k = 0.25;
+      if (T.state === "pull"){ ta = -19 + 5*Math.sin(t*22 + ph); }
+      else if (T.state === "stumble"){ ta = 9 + 6*Math.sin(t*14 + ph); }
+      else if (T.state === "fallen"){ ta = 78; ty = 6; tsq = 0.55; k = 0.07; }
+      else if (T.state === "cheer"){ ta = -4 + 6*Math.sin(t*9 + ph); ty = -Math.abs(Math.sin(t*7 + ph))*34; }
+      m.a += (ta - m.a) * k; m.y += (ty - m.y) * 0.3; m.sqz += (tsq - m.sqz) * k;
+      if (i === 0) s0 = s;
+      if (T.view === "side"){
+        m.outer.setAttribute("transform", `translate(${sx.toFixed(1)} ${(sy + m.y).toFixed(1)}) scale(${(s*T.flip).toFixed(3)} ${s.toFixed(3)})`);
+        m.inner.setAttribute("transform", `rotate(${m.a.toFixed(2)})`);
+        const [hx, hy] = rot(50, -98, m.a);
+        pts.push([sx + s*T.flip*hx, sy + m.y + s*hy]);
+      } else {
+        const bob = T.state === "fallen" ? 14 : (m.a + 10) * 0.8;
+        const tr = `translate(${sx.toFixed(1)} ${(sy + m.y).toFixed(1)}) scale(${s.toFixed(3)})`;
+        const inn = `translate(0 ${bob.toFixed(1)}) scale(1 ${m.sqz.toFixed(3)})`;
+        m.outer.setAttribute("transform", tr); m.inner.setAttribute("transform", inn);
+        m.handsOuter.setAttribute("transform", tr); m.handsInner.setAttribute("transform", inn);
+        pts.push([sx, sy + m.y + s*(bob - 74*m.sqz)]);
+      }
+      lastFeet = [wx, wz];
+    });
+    const [dx, dy] = W2S(T.dir[0], T.dir[1]); let sd = [dx - 800, dy - SC.G]; const L = Math.hypot(sd[0], sd[1]) || 1; sd = [sd[0]/L, sd[1]/L];
+    const T1 = W2S(lastFeet[0] + T.dir[0]*70, lastFeet[1] + T.dir[1]*70), T2 = W2S(lastFeet[0] + T.dir[0]*140, lastFeet[1] + T.dir[1]*140 + 10);
+    const taut = T.state === "pull" || Object.values(SC.teams).some(o => o.state === "pull");
+    const sagK = (taut ? 0.018 : 0.055) + 0.012*Math.sin(t*2.6 + T.phase);
+    const d = ropePath(pts, sagK, [pts[pts.length-1], T1, T2, sd]);
+    const w = 1.05 * s0;
+    T.ropePaths.forEach((p, j) => p.setAttribute("d", d));
+    T.ropePaths[0].setAttribute("stroke-width", (15*w).toFixed(1));
+    T.ropePaths[1].setAttribute("stroke-width", (10.5*w).toFixed(1));
+    T.ropePaths[2].setAttribute("stroke-width", (9.5*w).toFixed(1)); T.ropePaths[2].setAttribute("stroke-dasharray", `${(3.2*w).toFixed(1)} ${(6.8*w).toFixed(1)}`);
+    T.ropePaths[3].setAttribute("stroke-width", (9.5*w).toFixed(1)); T.ropePaths[3].setAttribute("stroke-dasharray", `${(1.6*w).toFixed(1)} ${(8.4*w).toFixed(1)}`);
+    T.ropePaths[3].setAttribute("stroke-dashoffset", (4.6*w).toFixed(1));
+  }
+}
+
+/* ======================= GAME STATE ======================= */
+const S = {phase:"menu", qi:-1, order:[], score:{red:0, blue:0, purple:0}, picks:{}, qid:"", deadline:0, last:null, winner:null};
+let tickT = null;
+
+function proj(tk){ // progress of a team toward its flag, in steps
+  const c = SC.teams[tk]; if (!c) return 0;
+  return (SC.target.x * c.dir[0] + SC.target.z * c.dir[1]) / SC.step;
+}
+function renderPips(){
+  teamList().forEach(tk => { const el = document.querySelector(`.team[data-t="${tk}"] .pips`); if (!el) return;
+    const n = Math.max(0, Math.min(settings.steps, Math.floor(proj(tk) + 1e-6)));
+    el.innerHTML = Array.from({length:settings.steps}, (_, i) => `<i class="${i < n ? "on" : ""}"></i>`).join(""); });
+}
+function banner(text, color, ms){
+  const b = $("banner"); b.textContent = text; b.style.background = color || ""; b.classList.add("on");
+  clearTimeout(b._t); if (ms) b._t = setTimeout(() => b.classList.remove("on"), ms);
+}
+function buildHud(){
+  const n = teamList().length; document.documentElement.style.setProperty("--n", n);
+  $("app").classList.toggle("n3", n === 3);
+  $("hud").innerHTML = teamList().map(tk => { const T = TEAMDEF[tk];
+    return `<div class="team" data-t="${tk}" style="--c1:${T.c1};--c2:${T.c2}">
+      <div class="lock">Đã chọn ✓</div>
+      <svg class="tav" viewBox="-60 -200 120 110">${frontHead(T.animals[0], tk)}</svg>
+      <div class="tinfo"><div class="tname">${esc(tname(tk))}</div>
+        <div class="tsub"><span class="chip">Phím ${T.kl}</span><span class="chip phone" hidden>📱</span></div>
+        <div class="pips"></div></div>
+      <div class="pads">${LETTERS.map((L, i) => `<button data-i="${i}" title="${L}">${L}</button>`).join("")}</div>
+    </div>`; }).join("");
+  const btns = teamList().map(tk => `<button class="btn tm" data-plus="${tk}" style="--c1:${TEAMDEF[tk].c1};--c2:${TEAMDEF[tk].c2}">+1 ${esc(tname(tk))}</button>`);
+  btns.splice(Math.ceil(n/2), 0, `<button class="btn big" id="btnNext">Câu tiếp ▶</button>`);
+  $("qctl").innerHTML = btns.join("");
+  $("btnNext").onclick = () => { audioInit(); if (S.phase === "ask") reveal(); else if (S.phase === "reveal") nextQ(); };
+  document.querySelectorAll("[data-plus]").forEach(b => b.onclick = () => award(b.dataset.plus));
+  document.querySelectorAll(".team .pads").forEach(p => p.addEventListener("click", e => { const b = e.target.closest("button"); if (b){ audioInit(); pick(p.closest(".team").dataset.t, +b.dataset.i); } }));
+  updateOnline(); renderPips();
+}
+function validQs(){ return questions.filter(q => (q.q||"").trim() && q.a.filter(x => (x||"").trim()).length >= 2 && (q.a[q.c]||"").trim()); }
+
+function startGame(){
+  audioInit(); syncMusic(); readMenu();
+  const qs = validQs(); if (!qs.length){ openEditor(); return; }
+  S.order = qs; S.qi = -1; S.winner = null; S.score = {red:0, blue:0, purple:0};
+  buildHud(); buildScene();
+  ["menu","end","editor","connect"].forEach(id => $(id).hidden = true);
+  stopConfetti();
+  S.phase = "countdown"; renderQ(); broadcast();
+  let n = 3; banner("3", "", 0); SFX.count();
+  const iv = setInterval(() => { n--; if (n > 0){ banner(String(n), "", 0); SFX.count(); } else { clearInterval(iv); banner("KÉO NÀO!", "", 900); SFX.go(); nextQ(); } }, 800);
+}
+function nextQ(){
+  if (S.phase === "end") return;
+  S.qi++;
+  if (S.qi >= S.order.length){ const best = teamList().map(tk => [tk, proj(tk)]).sort((a,b) => b[1]-a[1]);
+    finish(best[0][1] > best[1][1] + 1e-6 ? best[0][0] : null, true); return; }
+  S.phase = "ask"; S.picks = {}; S.last = null;
+  S.qid = Math.random().toString(36).slice(2, 9);
+  S.deadline = settings.time ? performance.now() + settings.time*1000 : 0;
+  renderQ(); broadcast();
+  clearInterval(tickT); let lastSec = -1;
+  tickT = setInterval(() => {
+    if (S.phase !== "ask"){ clearInterval(tickT); return; }
+    if (!S.deadline){ $("timeNum").textContent = "∞"; $("ring").style.strokeDashoffset = 0; return; }
+    const left = Math.max(0, S.deadline - performance.now()), sec = Math.ceil(left/1000);
+    $("timeNum").textContent = sec; $("ring").style.strokeDashoffset = 113.1 * (1 - left/(settings.time*1000));
+    $("timer").classList.toggle("hurry", sec <= 5);
+    if (sec !== lastSec && sec <= 5 && sec > 0) SFX.tick(); lastSec = sec;
+    if (left <= 0) reveal();
+  }, 100);
+}
+function pick(tk, i){
+  if (S.phase !== "ask" || S.picks[tk] || !teamList().includes(tk)) return;
+  const q = S.order[S.qi]; if (!q || !(q.a[i]||"").trim()) return;
+  S.picks[tk] = {i, t: performance.now()};
+  const lk = document.querySelector(`.team[data-t="${tk}"] .lock`); if (lk) lk.classList.add("on");
+  SFX.lock(); broadcast();
+  if (teamList().every(t => S.picks[t])) setTimeout(reveal, 500);
+}
+function reveal(){
+  if (S.phase !== "ask") return;
+  S.phase = "reveal"; clearInterval(tickT); $("timer").classList.remove("hurry");
+  const q = S.order[S.qi];
+  const ok = {}; teamList().forEach(tk => ok[tk] = !!(S.picks[tk] && S.picks[tk].i === q.c));
+  const right = teamList().filter(tk => ok[tk]).sort((a, b) => S.picks[a].t - S.picks[b].t);
+  const w = right[0] || null;
+  S.last = {ok, w};
+  renderQ();
+  if (w){
+    const why = right.length > 1 ? `${tname(w)} đúng và nhanh nhất! ⚡` : `${tname(w)} trả lời đúng!`;
+    SFX.right(); setTimeout(SFX.pull, 300);
+    banner("🎉 " + why, TEAMDEF[w].c2, 2600); movePull(w);
+  } else { SFX.wrong(); banner("Chưa đội nào đúng!", "", 2200); }
+  broadcast();
+}
+function movePull(w){
+  S.score[w] = (S.score[w] || 0) + 1;
+  syncTarget(false);
+  teamList().forEach(tk => setTeamState(tk, tk === w ? "pull" : "stumble", 1200));
+  renderPips();
+  if (proj(w) >= settings.steps - 1e-6) setTimeout(() => finish(w), 1300);
+}
+function award(tk){
+  if (S.phase !== "ask" && S.phase !== "reveal") return;
+  audioInit(); SFX.pull(); banner("+1 nấc cho " + tname(tk) + "!", TEAMDEF[tk].c2, 1800);
+  movePull(tk); broadcast();
+}
+function finish(w, byQuestions){
+  if (S.phase === "end") return;
+  S.phase = "end"; S.winner = w; clearInterval(tickT); renderQ(); broadcast();
+  if (w){ teamList().forEach(tk => setTeamState(tk, tk === w ? "cheer" : "fallen", 0)); setTimeout(() => SC.splash.classList.add("on"), 500); }
+  setTimeout(() => {
+    $("endTitle").textContent = w ? tname(w).toUpperCase() + " THẮNG!" : "HÒA NHAU RỒI!";
+    $("endTitle").style.color = w ? "#fff" : "#ffe28a";
+    $("endTitle").style.textShadow = w ? `0 5px 0 ${TEAMDEF[w].c2}, 0 0 30px ${TEAMDEF[w].c1}` : "";
+    $("endSub").textContent = w ? (byQuestions ? "Hết câu hỏi, " + tname(w) + " kéo được nhiều nhất." : "Kéo sợi dây về tới vạch đích. Giỏi quá!") : "Các đội ngang tài ngang sức!";
+    $("end").hidden = false; SFX.win(); startConfetti(w);
+  }, 1200);
+}
+function renderQ(){
+  const q = S.order[S.qi];
+  document.querySelectorAll(".team").forEach(el => el.querySelector(".lock").classList.toggle("on", !!S.picks[el.dataset.t] && S.phase === "ask"));
+  $("qCount").textContent = S.phase === "menu" ? "Sẵn sàng!" : q ? `Câu ${S.qi+1}/${S.order.length}` : "Chuẩn bị…";
+  if (S.phase === "menu" || S.phase === "countdown" || !q){
+    $("qText").textContent = S.phase === "menu" ? "Các đội đã sẵn sàng chưa nào?" : "Chuẩn bị nào!"; $("answers").innerHTML = "";
+    $("timeNum").textContent = settings.time || "∞"; $("ring").style.strokeDashoffset = 0;
+  } else {
+    $("qText").textContent = q.q;
+    const rev = S.phase === "reveal" || S.phase === "end";
+    $("answers").innerHTML = q.a.map((t,i) => {
+      if (!(t||"").trim()) return "";
+      const cls = rev ? (i === q.c ? "right" : "dim") : "";
+      let picks = "";
+      if (rev) teamList().forEach(tk => { if (S.picks[tk] && S.picks[tk].i === i) picks += `<span style="background:${TEAMDEF[tk].c1}">${esc(tname(tk))}</span>`; });
+      return `<div class="ans ${cls}"><div class="lt">${LETTERS[i]}</div><div class="tx">${esc(t)}</div>${picks ? `<div class="picks">${picks}</div>` : ""}</div>`;
+    }).join("");
+  }
+  const nb = $("btnNext");
+  if (nb) nb.textContent = S.phase === "ask" ? "Xem đáp án 👀" : (S.qi + 1 >= S.order.length && S.phase === "reveal") ? "Kết thúc 🏁" : "Câu tiếp ▶";
+  $("qctl").style.visibility = (S.phase === "ask" || S.phase === "reveal") ? "visible" : "hidden";
+}
+function applyFz(){ document.documentElement.style.setProperty("--fz", settings.fz); }
+function stepFz(d){ let i = FZ.indexOf(settings.fz); if (i < 0) i = 1; i = Math.max(0, Math.min(FZ.length-1, i + d)); settings.fz = FZ[i]; applyFz(); saveSettings(); }
+
+/* ======================= CONFETTI ======================= */
+let confT = null;
+function startConfetti(w){
+  const cv = $("confetti"), ctx = cv.getContext("2d");
+  const r = cv.getBoundingClientRect(); cv.width = r.width; cv.height = r.height;
+  const cols = w ? [TEAMDEF[w].c1, "#ffc93c", "#fff", TEAMDEF[w].c2] : ["#ff4057","#2b8cff","#ffc93c","#a855f7"];
+  const P = Array.from({length:220}, () => ({x:Math.random()*cv.width, y:-Math.random()*cv.height, s:6+Math.random()*9, vy:2+Math.random()*4, vx:-1.5+Math.random()*3, a:Math.random()*6, va:-.2+Math.random()*.4, c:cols[Math.floor(Math.random()*cols.length)]}));
+  cancelAnimationFrame(confT);
+  const loop = () => { ctx.clearRect(0,0,cv.width,cv.height);
+    P.forEach(p => { p.y += p.vy; p.x += p.vx; p.a += p.va; if (p.y > cv.height + 20){ p.y = -20; p.x = Math.random()*cv.width; }
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.a); ctx.fillStyle = p.c; ctx.fillRect(-p.s/2,-p.s/4,p.s,p.s/2); ctx.restore(); });
+    confT = requestAnimationFrame(loop); };
+  loop();
+}
+function stopConfetti(){ cancelAnimationFrame(confT); const cv = $("confetti"); cv.getContext("2d").clearRect(0,0,cv.width,cv.height); }
+
+/* ======================= QUESTION PARSING (Word / paste) ======================= */
+const ANS_RE = /(^|\s)(\*?)\s*([A-D])\s*[.):]\s*/g;
+// lines: [{text, emph:[strings]}] -> {qs, warn}
+function parseLines(lines){
+  const qs = []; let cur = null;
+  const norm = s => s.replace(/\s+/g, " ").trim().toLowerCase();
+  const push = () => { if (cur && cur.q.trim() && cur.a.length >= 2) qs.push(cur); cur = null; };
+  for (const L of lines){
+    const t = L.text.replace(/ /g, " ").trim();
+    if (!t) continue;
+    const dm = t.match(/^(?:đáp\s*án(?:\s*đúng)?|dap\s*an)\s*(?:là)?\s*[:：.-]?\s*([A-D])\b/i);
+    if (dm){ if (cur) cur.c = LETTERS.indexOf(dm[1].toUpperCase()); continue; }
+    const starts = /^\*?\s*[A-D]\s*[.):]/.test(t);
+    if (starts && cur){
+      const ms = [...t.matchAll(ANS_RE)];
+      // split into segments by letter markers
+      for (let k=0;k<ms.length;k++){
+        const m = ms[k], st = m.index + m[0].length, en = k+1 < ms.length ? ms[k+1].index : t.length;
+        let txt = t.slice(st, en).trim(), star = m[2] === "*";
+        if (/\*$/.test(txt)){ star = true; txt = txt.replace(/\s*\*$/, ""); }
+        if (!txt || cur.a.length >= 4) continue;
+        const nt = norm(txt);
+        const em = (L.emph || []).some(e => { const ne = norm(e); return ne.length && (ne === nt || (ne.includes(nt) && nt.length >= 1 && ne.length <= nt.length + 4)); });
+        if ((star || em) && cur.c < 0) cur.c = cur.a.length;
+        cur.a.push(txt);
+      }
+      continue;
+    }
+    // a question line
+    const isNum = /^(?:câu|bài)\s*\d+/i.test(t);
+    if (cur && cur.a.length === 0 && !isNum){ cur.q += " " + t; continue; }
+    push();
+    cur = {q: t.replace(/^(?:câu|bài)\s*\d+\s*[:.)\-]?\s*/i, ""), a:[], c:-1};
+  }
+  push();
+  let warn = 0;
+  qs.forEach(q => { while (q.a.length < 4) q.a.push(""); if (q.c < 0){ q.c = 0; q.warn = true; warn++; } });
+  return {qs, warn};
+}
+function parseBlocks(txt){ // fallback: blank-line separated, '*' marks correct
+  const qs = [];
+  txt.replace(/\r/g,"").split(/\n\s*\n/).forEach(block => {
+    const lines = block.split("\n").map(l => l.trim()).filter(Boolean); if (lines.length < 3) return;
+    const q = lines[0].replace(/^(?:câu|bài)\s*\d+\s*[:.)\-]?\s*/i, "");
+    const a = []; let c = -1;
+    lines.slice(1, 5).forEach(l => { let star = false; l = l.replace(/^\*\s*/, () => (star = true, "")); if (/\*\s*$/.test(l)){ star = true; l = l.replace(/\s*\*\s*$/,""); }
+      if (star && c < 0) c = a.length; a.push(l); });
+    while (a.length < 4) a.push("");
+    qs.push({q, a, c: c < 0 ? 0 : c, warn: c < 0});
+  });
+  return {qs, warn: qs.filter(q => q.warn).length};
+}
+function parseText(txt){
+  const lines = txt.replace(/\r/g, "").split("\n");
+  if (lines.some(l => /^\s*\*?\s*[A-D]\s*[.):]/.test(l))) return parseLines(lines.map(text => ({text, emph:[]})));
+  return parseBlocks(txt);
+}
+// --- minimal .docx reader (zip + document.xml), detects bold / underline / red / highlight ---
+async function readDocx(buf){
+  const dv = new DataView(buf), u8 = new Uint8Array(buf);
+  let eocd = -1; for (let i = u8.length - 22; i >= Math.max(0, u8.length - 66000); i--){ if (dv.getUint32(i, true) === 0x06054b50){ eocd = i; break; } }
+  if (eocd < 0) throw new Error("not zip");
+  const count = dv.getUint16(eocd + 10, true); let off = dv.getUint32(eocd + 16, true);
+  let entry = null;
+  for (let n=0;n<count;n++){
+    const method = dv.getUint16(off + 10, true), csize = dv.getUint32(off + 20, true), nlen = dv.getUint16(off + 28, true), xlen = dv.getUint16(off + 30, true), clen = dv.getUint16(off + 32, true), lho = dv.getUint32(off + 42, true);
+    const name = new TextDecoder().decode(u8.subarray(off + 46, off + 46 + nlen));
+    if (name === "word/document.xml") entry = {method, csize, lho};
+    off += 46 + nlen + xlen + clen;
+  }
+  if (!entry) throw new Error("no document.xml");
+  const lnl = dv.getUint16(entry.lho + 26, true), lxl = dv.getUint16(entry.lho + 28, true);
+  const data = u8.subarray(entry.lho + 30 + lnl + lxl, entry.lho + 30 + lnl + lxl + entry.csize);
+  let xml;
+  if (entry.method === 0) xml = new TextDecoder().decode(data);
+  else { const ds = new DecompressionStream("deflate-raw"); xml = await new Response(new Blob([data]).stream().pipeThrough(ds)).text(); }
+  const doc = new DOMParser().parseFromString(xml, "application/xml");
+  const W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+  const lines = [];
+  const paras = doc.getElementsByTagNameNS(W, "p");
+  for (const p of paras){
+    // a paragraph may contain line breaks <w:br/>; split into separate lines
+    let cur = {text:"", emph:[]}, run = "";
+    const flushEmph = () => { if (run.trim()) cur.emph.push(run); run = ""; };
+    const out = [cur];
+    for (const r of p.getElementsByTagNameNS(W, "r")){
+      const pr = r.getElementsByTagNameNS(W, "rPr")[0];
+      let em = false;
+      if (pr){
+        const on = tag => { const e = pr.getElementsByTagNameNS(W, tag)[0]; if (!e) return false; const v = e.getAttributeNS(W, "val") || e.getAttribute("w:val"); return !v || !/^(0|false|none)$/i.test(v); };
+        const col = pr.getElementsByTagNameNS(W, "color")[0], cv = col ? (col.getAttributeNS(W, "val") || col.getAttribute("w:val") || "") : "";
+        const red = /^[a-f0-9]{6}$/i.test(cv) && (() => { const R = parseInt(cv.slice(0,2),16), G = parseInt(cv.slice(2,4),16), B = parseInt(cv.slice(4,6),16); return R > 150 && G < 110 && B < 110; })();
+        em = on("b") || on("u") || on("highlight") || red || !!pr.getElementsByTagNameNS(W, "shd")[0] && !/^(auto|FFFFFF)$/i.test(pr.getElementsByTagNameNS(W, "shd")[0].getAttributeNS(W, "fill") || pr.getElementsByTagNameNS(W, "shd")[0].getAttribute("w:fill") || "auto");
+      }
+      for (const ch of r.childNodes){
+        if (ch.namespaceURI !== W) continue;
+        if (ch.localName === "t"){ cur.text += ch.textContent; if (em) run += ch.textContent; else flushEmph(); }
+        else if (ch.localName === "tab"){ cur.text += "    "; if (em) run += " "; }
+        else if (ch.localName === "br" || ch.localName === "cr"){ flushEmph(); cur = {text:"", emph:[]}; out.push(cur); }
+      }
+      if (!em) flushEmph();
+    }
+    flushEmph();
+    out.forEach(o => lines.push(o));
+  }
+  return lines;
+}
+
+/* ======================= EDITOR ======================= */
+function renderEditor(){
+  $("qlist").innerHTML = questions.map((q, n) => `
+    <div class="qe ${q.warn ? "warn" : ""}" data-n="${n}">
+      <div class="top"><span class="n">Câu ${n+1}</span>${q.warn ? `<span style="color:#ffb020;font-weight:800">Chưa rõ đáp án đúng</span>` : ""}<button class="del" data-del="${n}">✕ Xóa</button></div>
+      <textarea id="q${n}" data-f="q" rows="1" placeholder="Gõ câu hỏi…">${esc(q.q)}</textarea>
+      <div class="opts">${[0,1,2,3].map(i => `<div class="opt"><label><input type="radio" name="c${n}" value="${i}" ${q.c===i?"checked":""}> ${LETTERS[i]}</label>
+        <input type="text" id="q${n}a${i}" data-a="${i}" value="${esc(q.a[i]||"")}" placeholder="Đáp án ${LETTERS[i]}"></div>`).join("")}</div>
+    </div>`).join("");
+  $("qNum").textContent = validQs().length;
+}
+function readEditor(){
+  document.querySelectorAll(".qe").forEach(el => {
+    const n = +el.dataset.n, q = questions[n]; if (!q) return;
+    q.q = el.querySelector("[data-f=q]").value;
+    q.a = [0,1,2,3].map(i => el.querySelector(`[data-a="${i}"]`).value);
+    const r = el.querySelector(`input[name=c${n}]:checked`); const nc = r ? +r.value : 0;
+    if (nc !== q.c) delete q.warn; q.c = nc;
+  });
+}
+function toBulk(){
+  return questions.map((q, n) => [`Câu ${n+1}: ${q.q}`, ...q.a.map((a,i) => (a||"").trim() ? (i===q.c?"*":"") + LETTERS[i] + ". " + a : null).filter(Boolean)].join("\n")).join("\n\n");
+}
+function showTab(tab){
+  document.querySelectorAll(".tabs button").forEach(x => x.classList.toggle("on", x.dataset.tab === tab));
+  $("tabForm").hidden = tab !== "form"; $("tabWord").hidden = tab !== "word"; $("tabBulk").hidden = tab !== "bulk";
+  if (tab === "bulk"){ $("bulk").value = toBulk(); $("bulkMsg").textContent = ""; }
+  if (tab === "form") renderEditor();
+}
+function openEditor(){ renderEditor(); showTab("form"); $("editor").hidden = false; }
+function wireReset(){
+  $("resetBox").innerHTML = `<button class="btn ghost" id="edReset">↺ Dùng lại câu mẫu</button>`;
+  $("edReset").onclick = () => {
+    $("resetBox").innerHTML = `<span style="font-weight:800">Thay toàn bộ bằng 10 câu mẫu?</span> <button class="btn tm" style="--c1:#e11d48;--c2:#9f1239" id="rsYes">Đồng ý</button> <button class="btn ghost" id="rsNo">Thôi</button>`;
+    $("rsYes").onclick = () => { questions = clone(SAMPLE); save(LS_Q, questions); renderEditor(); wireReset(); };
+    $("rsNo").onclick = wireReset;
+  };
+}
+let wordParsed = null;
+async function handleWord(file){
+  const msg = $("wordMsg"); $("wordAct").hidden = true; wordParsed = null;
+  if (!file) return;
+  if (!/\.docx$/i.test(file.name)){ msg.className = "msg bad"; msg.textContent = "Game chỉ đọc được file .docx. Nếu là file .doc cũ, thầy cô mở bằng Word rồi chọn Lưu thành (Save As) → Word Document (.docx)."; return; }
+  msg.className = "msg"; msg.textContent = "Đang đọc file…";
+  try{
+    const lines = await readDocx(await file.arrayBuffer());
+    const r = parseLines(lines);
+    if (!r.qs.length){ msg.className = "msg bad"; msg.textContent = "Chưa tìm thấy câu trắc nghiệm nào. Mỗi đáp án cần bắt đầu bằng A. B. C. D. như ví dụ ở trên."; return; }
+    wordParsed = r.qs;
+    msg.className = "msg ok";
+    msg.textContent = `✔ Đọc được ${r.qs.length} câu hỏi từ "${file.name}".` + (r.warn ? ` Có ${r.warn} câu chưa rõ đáp án đúng (tạm chọn A), sẽ hiện viền cam để thầy cô sửa.` : "");
+    $("wordAct").hidden = false;
+  } catch(e){ msg.className = "msg bad"; msg.textContent = "Không mở được file này. Thầy cô thử lưu lại file bằng Word (.docx) rồi chọn lại nhé."; }
+}
+function useParsed(qs, replace){
+  questions = replace ? qs : questions.concat(qs);
+  save(LS_Q, questions); $("qNum").textContent = validQs().length; showTab("form");
+}
+
+/* ======================= NETWORK (phones) ======================= */
+// Two ways: inside Claude -> "room" capability; on a normal website (GitHub Pages) -> PeerJS.
+const NET = {kind:null, room:null, peer:null, conns:new Set(), code:null, ready:false, err:""};
+function useCap(name){
+  return new Promise(res => {
+    let tries = 0;
+    const go = () => { const c = window.claude; if (c && c.use) c.use(name).then(res, () => res(null)); else if (++tries < 10) setTimeout(go, 150); else res(null); };
+    go();
+  });
+}
+function gameState(){
+  const q = S.order[S.qi], show = q && S.phase !== "countdown" && S.phase !== "menu";
+  const g = {phase:S.phase, qid:S.qid, n:S.qi+1, total:S.order.length, teams:teamList(), names:{},
+    q: show ? q.q.slice(0,300) : "", opts: show ? q.a.map(x => (x||"").slice(0,80)) : [], locked:{}};
+  teamList().forEach(tk => { g.names[tk] = tname(tk).slice(0,30); g.locked[tk] = !!S.picks[tk]; });
+  if ((S.phase === "reveal" || S.phase === "end") && q){ g.correct = q.c; g.ok = S.last ? S.last.ok : {}; g.w = S.last ? S.last.w : null; }
+  if (S.phase === "end") g.winner = S.winner;
+  return g;
+}
+function broadcast(){
+  if (CTRL) return;
+  const g = gameState();
+  if (NET.kind === "room" && NET.room) NET.room.presence({role:"host", g}).catch(() => {});
+  if (NET.kind === "peer") NET.conns.forEach(c => { try{ if (c.open) c.send({t:"state", g}); }catch(e){} });
+}
+function handlePick(tk, qid, ans){ if (qid === S.qid && typeof ans === "number") pick(tk, ans); }
+function updateOnline(){
+  const on = {red:0, blue:0, purple:0};
+  if (NET.kind === "room" && NET.room) NET.room.peers().forEach(p => { const r = p.presence && p.presence.role; if (on[r] != null) on[r]++; });
+  if (NET.kind === "peer") NET.conns.forEach(c => { if (c.open && on[c.team] != null) on[c.team]++; });
+  document.querySelectorAll(".team").forEach(el => { const n = on[el.dataset.t] || 0, ch = el.querySelector(".phone"); ch.hidden = !n; ch.textContent = "📱 Đã kết nối"; });
+  document.querySelectorAll(".qrbox").forEach(el => { const n = on[el.dataset.t] || 0, st = el.querySelector(".status"); st.textContent = n ? "✔ Đã kết nối" : "Chưa kết nối"; st.classList.toggle("ok", !!n); });
+}
+function genCode(){ const a = "abcdefghjkmnpqrstuvwxyz23456789"; let s = ""; for (let i=0;i<6;i++) s += a[Math.floor(Math.random()*a.length)]; return s; }
+function startPeerHost(fresh){
+  if (!window.Peer){ NET.err = "Chưa tải được bộ kết nối điện thoại (cần có mạng)."; renderConnect(); return; }
+  NET.kind = "peer";
+  let code = !fresh && load(LS_ROOM); if (!code){ code = genCode(); save(LS_ROOM, code); }
+  const peer = new Peer("keocott-" + code, {debug:0});
+  NET.peer = peer;
+  peer.on("open", () => { NET.code = code; NET.ready = true; NET.err = ""; renderConnect(); });
+  peer.on("error", e => {
+    if (e.type === "unavailable-id"){ try{ peer.destroy(); }catch(_){} save(LS_ROOM, null); startPeerHost(true); return; }
+    if (e.type === "peer-unavailable") return;
+    NET.err = "Kết nối gặp trục trặc (" + e.type + "). Kiểm tra mạng rồi bấm lại nút Kết nối điện thoại."; NET.ready = false; renderConnect();
+  });
+  peer.on("disconnected", () => { try{ peer.reconnect(); }catch(_){} });
+  peer.on("connection", conn => {
+    conn.on("open", () => { NET.conns.add(conn); try{ conn.send({t:"state", g:gameState()}); }catch(_){} updateOnline(); });
+    conn.on("data", d => { if (!d || typeof d !== "object") return;
+      if (d.t === "hello" && TEAMDEF[d.team]){ conn.team = d.team; updateOnline(); try{ conn.send({t:"state", g:gameState()}); }catch(_){} }
+      if (d.t === "pick" && TEAMDEF[d.team]) handlePick(d.team, d.qid, d.ans); });
+    conn.on("close", () => { NET.conns.delete(conn); updateOnline(); });
+  });
+}
+function hostNet(){
+  useCap("room").then(r => {
+    if (r){
+      NET.kind = "room"; NET.room = r; NET.ready = true;
+      r.onPeers(ch => {
+        updateOnline();
+        [...ch.joined, ...ch.updated].forEach(p => { const pr = p.presence || {}; if (TEAMDEF[pr.role]) handlePick(pr.role, pr.qid, pr.ans); });
+        if (ch.joined.length) broadcast();
+      });
+      broadcast(); renderConnect();
+    } else startPeerHost(false);
+  });
+}
+function joinBase(){
+  if (/^https?:$/.test(location.protocol) && !/claudeusercontent|claude\.ai/.test(location.hostname)) return location.origin + location.pathname;
+  return (settings.webLink || "").trim();
+}
+function renderConnect(){
+  const teams = teamList();
+  $("keyHelp").innerHTML = teams.map(tk => `${esc(tname(tk))}: <b>${TEAMDEF[tk].kl}</b>`).join(" · ");
+  const st = $("netState");
+  const local = !/^https?:$/.test(location.protocol);
+  $("webLinkBox").hidden = !(NET.kind === "peer" && local);
+  if (NET.err){ st.textContent = "⚠️ " + NET.err; st.style.color = "#ffb4c0"; }
+  else if (!NET.ready){ st.textContent = "Đang chuẩn bị kết nối…"; st.style.color = ""; }
+  else { st.textContent = NET.kind === "room" ? "Điện thoại cần đăng nhập Claude bằng tài khoản được chia sẻ game này." : `Mã phòng: ${NET.code.toUpperCase()} · Học sinh không cần đăng nhập.`; st.style.color = "#a8ffc6"; }
+  $("qrs").innerHTML = teams.map(tk => `<div class="qrbox" data-t="${tk}" style="--c2:${TEAMDEF[tk].c2}"><h3>${esc(tname(tk))}</h3><div class="qrimg"></div><div class="link"></div><div class="status">Chưa kết nối</div></div>`).join("");
+  teams.forEach(tk => {
+    const box = document.querySelector(`.qrbox[data-t="${tk}"]`), img = box.querySelector(".qrimg"), ln = box.querySelector(".link");
+    let url = "";
+    if (NET.kind === "room") url = ARTIFACT_URL + "#" + TEAMDEF[tk].tag;
+    else if (NET.kind === "peer" && NET.ready){ const b = joinBase(); if (b) url = b + (b.includes("?") ? "&" : "?") + "join=" + NET.code + "&team=" + tk; }
+    if (!url){ img.textContent = NET.kind === "peer" && NET.ready ? "Dán link GitHub ở trên để hiện mã QR" : "Đang chờ…"; return; }
+    ln.textContent = url;
+    if (window.QRCode) new QRCode(img, {text:url, width:240, height:240, correctLevel: QRCode.CorrectLevel.M}); else img.textContent = "(Cần mạng để hiện mã QR)";
+  });
+  updateOnline();
+}
+
+/* ======================= PHONE CONTROLLER ======================= */
+function controller(){
+  $("app").hidden = true; const C = $("ctrl"); C.hidden = false;
+  let team = CTRL === "?" ? null : CTRL, g = null, myAns = null, myQid = null, conn = null, room = null, connected = false;
+  const setColors = () => { const T = TEAMDEF[team] || {c1:"#7c4dff", c2:"#4527a0"}; C.style.setProperty("--c1", T.c1); C.style.setProperty("--c2", T.c2); };
+  const send = msg => { if (conn && conn.open) try{ conn.send(msg); }catch(_){} };
+  const choose = () => {
+    $("cName").textContent = "Chọn đội"; $("cQ").textContent = ""; $("cQText").textContent = "Em thuộc đội nào?";
+    const teams = g ? g.teams : ["red","blue","purple"];
+    $("cBtns").innerHTML = `<div class="choose" style="grid-column:1/-1">${teams.map(tk => `<button data-team="${tk}" style="background:${TEAMDEF[tk].c1}">${esc(g && g.names[tk] || TEAMDEF[tk].name)}</button>`).join("")}</div>`;
+    $("cMsg").textContent = "";
+  };
+  const draw = () => {
+    setColors();
+    $("cDot").classList.toggle("ok", connected);
+    if (!team){ choose(); return; }
+    $("cName").textContent = g && g.names[team] ? g.names[team] : TEAMDEF[team].name;
+    const btns = $("cBtns");
+    if (!g || !g.q || g.phase === "menu" || g.phase === "countdown"){
+      $("cQ").textContent = g && g.phase === "countdown" ? "Sắp bắt đầu" : "";
+      $("cQText").textContent = !connected ? "Đang kết nối với máy chiếu…" : g && g.phase === "end" ? "Hết trận!" : "Đã kết nối! Chờ thầy cô bắt đầu…";
+      btns.innerHTML = [0,1,2,3].map(i => `<button class="cbtn" disabled><span class="L">${LETTERS[i]}</span></button>`).join("");
+      $("cMsg").textContent = g && g.phase === "end" ? (g.winner ? (g.winner === team ? "🏆 Đội mình thắng rồi!" : "Cố lên lần sau nhé!") : "Hòa nhau rồi!") : "";
+      return;
+    }
+    $("cQ").textContent = "Câu " + g.n + "/" + g.total;
+    $("cQText").textContent = g.q;
+    if (g.qid !== myQid){ myQid = g.qid; myAns = null; }
+    const already = myAns !== null || (g.locked && g.locked[team]);
+    const locked = g.phase !== "ask" || already;
+    btns.innerHTML = g.opts.map((t,i) => (t||"").trim() ? `<button class="cbtn ${myAns===i?"sel":""}" data-i="${i}" ${locked?"disabled":""}><span class="L">${LETTERS[i]}</span><span class="T">${esc(t)}</span></button>` : "").join("");
+    if (g.phase === "ask") $("cMsg").textContent = already ? "Đã chọn! Chờ kết quả… ⏳" : "Chạm vào đáp án để chọn";
+    else { const ok = g.ok && g.ok[team]; $("cMsg").textContent = (ok ? "🎉 Đúng rồi! " : "😅 Chưa đúng. ") + "Đáp án: " + LETTERS[g.correct]; }
+  };
+  C.addEventListener("click", e => {
+    const tb = e.target.closest("button[data-team]");
+    if (tb){ team = tb.dataset.team; send({t:"hello", team}); if (room) room.presence({role:team}).catch(()=>{}); draw(); return; }
+    const b = e.target.closest("button[data-i]"); if (!b || !g || g.phase !== "ask" || myAns !== null || !team) return;
+    myAns = +b.dataset.i; if (navigator.vibrate) try{ navigator.vibrate(60) }catch(_){}
+    send({t:"pick", team, qid:g.qid, ans:myAns});
+    if (room) room.presence({role:team, qid:g.qid, ans:myAns, t:Date.now()}).catch(() => {});
+    draw();
+  });
+  draw();
+  if (JOIN){
+    if (!window.Peer){ $("cQText").textContent = "Không tải được bộ kết nối. Kiểm tra mạng rồi mở lại link."; return; }
+    const peer = new Peer({debug:0});
+    const connect = () => {
+      conn = peer.connect("keocott-" + JOIN.toLowerCase(), {reliable:true});
+      conn.on("open", () => { connected = true; if (team) send({t:"hello", team}); draw(); });
+      conn.on("data", d => { if (d && d.t === "state"){ g = d.g; draw(); } });
+      conn.on("close", () => { connected = false; draw(); setTimeout(connect, 2000); });
+    };
+    peer.on("open", connect);
+    peer.on("error", e => { if (e.type === "peer-unavailable"){ $("cQText").textContent = "Chưa thấy máy chiếu. Thầy cô mở game và bấm Kết nối điện thoại nhé."; setTimeout(connect, 3000); } });
+    peer.on("disconnected", () => { try{ peer.reconnect(); }catch(_){} });
+  } else {
+    useCap("room").then(r => {
+      room = r;
+      if (!room){ $("cQText").textContent = "Không kết nối được. Hãy mở link này khi đã đăng nhập Claude."; return; }
+      if (team) room.presence({role:team});
+      room.onConnection(ok => { connected = ok; draw(); });
+      room.onPeers(ch => {
+        const hosts = ch.peers.filter(p => p.presence && p.presence.role === "host" && p.presence.g).sort((a,b) => b.updatedAt - a.updatedAt);
+        const ng = hosts[0] ? hosts[0].presence.g : null;
+        if (ng !== g){ g = ng; draw(); }
+      });
+    });
+  }
+}
+
+/* ======================= MENU & WIRING ======================= */
+function renderMenu(){
+  document.querySelectorAll("#segTeams button").forEach(b => b.classList.toggle("on", +b.dataset.n === settings.teams));
+  document.documentElement.style.setProperty("--n", teamList().length);
+  $("names").innerHTML = teamList().map(tk => `<label class="field" style="--c1:${TEAMDEF[tk].c1}">Tên ${TEAMDEF[tk].name.toLowerCase()}<input id="nm_${tk}" type="text" maxlength="24" value="${esc(tname(tk))}"></label>`).join("");
+  $("selTime").value = settings.time; $("selSteps").value = settings.steps;
+  $("howto").innerHTML = teamList().map(tk => `${esc(tname(tk))} bấm phím <b>${TEAMDEF[tk].kl}</b>`).join(" · ") + ", hoặc dùng điện thoại.<br>" +
+    "Chỉ một đội đúng thì đội đó kéo 1 nấc. Nhiều đội cùng đúng thì <b>đội trả lời nhanh nhất</b> được kéo.<br>Phím <b>Space</b> sang câu tiếp · <b>+ / −</b> đổi cỡ chữ · Nút <b>+1</b> để thầy cô tự cộng khi chấm bảng con.";
+  $("qNum").textContent = validQs().length;
+}
+function readMenu(){
+  teamList().forEach(tk => { const el = $("nm_" + tk); if (el) settings.names[tk] = el.value.trim() || TEAMDEF[tk].name; });
+  settings.time = +$("selTime").value; settings.steps = +$("selSteps").value; saveSettings();
+}
+function openMenu(){
+  S.phase = "menu"; clearInterval(tickT); stopConfetti(); S.score = {red:0, blue:0, purple:0}; S.picks = {};
+  $("end").hidden = true; $("menu").hidden = false;
+  if (SC.splash) SC.splash.classList.remove("on");
+  renderMenu(); buildHud(); buildScene(); renderQ(); broadcast();
+}
+function hostInit(){
+  applyFz(); openMenu();
+  $("segTeams").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; readMenu(); settings.teams = +b.dataset.n; saveSettings(); renderMenu(); buildHud(); buildScene(); broadcast(); });
+  $("btnStart").onclick = startGame;
+  $("btnAgain").onclick = () => { $("end").hidden = true; renderMenu(); startGame(); };
+  $("btnEndHome").onclick = openMenu; $("btnHome").onclick = openMenu;
+  $("selSteps").onchange = () => { settings.steps = +$("selSteps").value; buildScene(); renderPips(); };
+  $("fzUp").onclick = () => stepFz(1); $("fzDown").onclick = () => stepFz(-1);
+  $("btnMusic").onclick = () => { audioInit(); settings.music = !settings.music; saveSettings(); syncMusic(); };
+  $("btnFull").onclick = () => { const d = document; if (!d.fullscreenElement){ const p = d.documentElement.requestFullscreen && d.documentElement.requestFullscreen(); if (p) p.catch(()=>{}); } else d.exitFullscreen && d.exitFullscreen(); };
+  // editor
+  $("btnEdit").onclick = () => { readMenu(); openEditor(); };
+  $("edAdd").onclick = () => { readEditor(); questions.push({q:"", a:["","","",""], c:0}); renderEditor(); const n = questions.length-1; setTimeout(() => { const t = $("q"+n); if (t){ t.focus(); t.scrollIntoView({block:"center"}); } }, 30); };
+  $("qlist").addEventListener("click", e => { const d = e.target.closest("[data-del]"); if (d){ readEditor(); questions.splice(+d.dataset.del, 1); renderEditor(); } });
+  $("edSave").onclick = () => { if (!$("tabForm").hidden) readEditor(); save(LS_Q, questions); $("editor").hidden = true; $("qNum").textContent = validQs().length; };
+  wireReset();
+  document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => { if (!$("tabForm").hidden) readEditor(); showTab(b.dataset.tab); });
+  $("bulkApply").onclick = () => { const r = parseText($("bulk").value); const m = $("bulkMsg");
+    if (!r.qs.length){ m.className = "msg bad"; m.textContent = "Chưa đọc được câu nào, thầy cô xem lại mẫu nhé."; return; }
+    useParsed(r.qs, true); };
+  $("wordFile").onchange = e => handleWord(e.target.files[0]);
+  const drop = $("drop");
+  drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add("over"); });
+  drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+  drop.addEventListener("drop", e => { e.preventDefault(); drop.classList.remove("over"); handleWord(e.dataTransfer.files[0]); });
+  $("wordReplace").onclick = () => wordParsed && useParsed(wordParsed, true);
+  $("wordAppend").onclick = () => wordParsed && useParsed(wordParsed, false);
+  // connect
+  $("btnConnect").onclick = () => { readMenu(); buildHud(); renderConnect(); $("connect").hidden = false; };
+  $("connClose").onclick = () => $("connect").hidden = true;
+  $("webLink").value = settings.webLink || "";
+  $("webLink").addEventListener("change", () => { settings.webLink = $("webLink").value.trim(); saveSettings(); renderConnect(); });
+  // keyboard
+  document.addEventListener("keydown", e => {
+    if (e.target.matches("input,textarea,select")) return;
+    const k = e.key.toLowerCase();
+    for (const tk of teamList()){ const i = TEAMDEF[tk].keys.indexOf(k); if (i >= 0){ audioInit(); pick(tk, i); return; } }
+    if (e.key === " " || e.key === "Enter"){ if (S.phase === "ask" || S.phase === "reveal"){ e.preventDefault(); $("btnNext").click(); } }
+    else if (e.key === "+" || e.key === "=") stepFz(1);
+    else if (e.key === "-" || e.key === "_") stepFz(-1);
+  });
+  hostNet();
+}
+if (CTRL) controller(); else hostInit();
+</script>
+</body>
+</html>
